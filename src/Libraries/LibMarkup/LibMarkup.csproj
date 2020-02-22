@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Bau.Libraries.LibMarkupLanguage</RootNamespace>
+    <PackageId>Bau.Libraries.LibMarkup</PackageId>
+    <Authors>Jose Antonio Bautista Montejo</Authors>
+    <Company>Jose Antonio Bautista Montejo</Company>
+    <Description>Biblioteca de ayuda para tratamiento de archivos XML</Description>
+    <Copyright>Creative Commons</Copyright>
+    <RepositoryUrl>https://github.com/jbautistam/LibMarkup</RepositoryUrl>
+    <RepositoryType>Public</RepositoryType>
+    <PackageTags>helper, xml</PackageTags>
+    <Version>1.0.1</Version>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Services\JSON\**" />
+    <Compile Remove="Services\Tools\**" />
+    <EmbeddedResource Remove="Services\JSON\**" />
+    <EmbeddedResource Remove="Services\Tools\**" />
+    <None Remove="Services\JSON\**" />
+    <None Remove="Services\Tools\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Services\XML\ve-3844.tmp" />
+  </ItemGroup>
+
+</Project>

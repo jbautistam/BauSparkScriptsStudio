@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Bau.Libraries.BauSparkScripts.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Connections\DatabaseProvidersTools.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\LibDbProviders.Spark\LibDbProviders.Spark.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibHelper\LibHelper.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibLogger.Core\LibLogger.Core.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibMarkup\LibMarkup.csproj" />
+    <ProjectReference Include="..\BauSparkScripts.Models\BauSparkScripts.Models.csproj" />
+  </ItemGroup>
+
+</Project>

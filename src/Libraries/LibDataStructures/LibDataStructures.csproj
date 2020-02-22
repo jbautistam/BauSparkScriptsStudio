@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Bau.Libraries.LibDataStructures</RootNamespace>
+    <PackageId>Bau.Libraries.LibDataStructures</PackageId>
+    <Authors>Jose Antonio Bautista Montejo</Authors>
+    <Description>Data structures: tree, normalized dictionary, collections...</Description>
+    <Copyright>Creative Commons</Copyright>
+    <PackageLicenseUrl>https://creativecommons.org/licenses/?lang=es_ES</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/jbautistam/LibDataStructures</RepositoryUrl>
+    <RepositoryType>Public</RepositoryType>
+    <PackageTags>helper, data structures</PackageTags>
+    <AssemblyVersion>1.0.1.1</AssemblyVersion>
+    <FileVersion>1.0.1.1</FileVersion>
+    <Version>1.0.1</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+</Project>

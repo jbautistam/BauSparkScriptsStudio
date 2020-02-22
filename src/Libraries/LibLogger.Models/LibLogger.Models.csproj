@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Bau.LibrariesLibLogger.Models</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Metrics\Base\SetBaseModel.cs" />
+    <Compile Remove="Metrics\Base\SetBaseModelDictionary.cs" />
+  </ItemGroup>
+
+</Project>

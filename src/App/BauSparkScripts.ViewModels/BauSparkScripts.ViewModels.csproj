@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Bau.Libraries.BauSparkScripts.ViewModels</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Solutions\Explorers\Connections\TreeDetailsNodeViewModel.cs" />
+    <Compile Remove="Solutions\Explorers\Connections\TreeNodeViewModel.cs" />
+    <Compile Remove="Solutions\Explorers\Files\TreeDetailsNodeViewModel.cs" />
+    <Compile Remove="Solutions\Explorers\Files\TreeFoldersViewModel.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\BauMvvm.ViewModels\BauMvvm.ViewModels.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibCsvFiles\LibCsvFiles.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibJsonConversor\LibJsonConversor.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibLogger.Core\LibLogger.Core.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibParquetFiles\LibParquetFiles.csproj" />
+    <ProjectReference Include="..\BauSparkScripts.Application\BauSparkScripts.Application.csproj" />
+  </ItemGroup>
+
+</Project>

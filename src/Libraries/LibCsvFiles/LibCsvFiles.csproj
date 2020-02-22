@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Bau.Libraries.LibCsvFiles</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="ve-2694.tmp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LibHelper\LibHelper.csproj" />
+  </ItemGroup>
+
+</Project>

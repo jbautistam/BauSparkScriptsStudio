@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>BauMvvm.ViewModels</AssemblyName>
+    <RootNamespace>Bau.Libraries.BauMvvm.ViewModels</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Dialogs\**" />
+    <Compile Remove="EventArguments\**" />
+    <Compile Remove="Views\**" />
+    <EmbeddedResource Remove="Dialogs\**" />
+    <EmbeddedResource Remove="EventArguments\**" />
+    <EmbeddedResource Remove="Views\**" />
+    <None Remove="Dialogs\**" />
+    <None Remove="EventArguments\**" />
+    <None Remove="Views\**" />
+  </ItemGroup>
+
+</Project>

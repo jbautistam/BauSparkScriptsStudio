@@ -1,0 +1,18 @@
+﻿<UserControl x:Class="Bau.Controls.Tabs.ClosableTabHeader"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="150" d:DesignWidth="150">
+	<StackPanel Orientation="Horizontal">
+			<Label Content="TabItem"  Height="23" HorizontalAlignment="Left" 
+				   Margin="4,1,0,0" x:Name="lblHeader" VerticalAlignment="Top" 
+				   FontFamily="Courier" FontSize="12" />
+		<Button Height="19" HorizontalAlignment="Right" Margin="0,3,4,0" 
+					VerticalAlignment="Top" Width="20" Visibility="Visible" Padding="0" ToolTip="Cerrar"
+					Click="cmdClose_Click">
+			<Image Width="16" Height="16" Source="/BauControls;component/Themes/Images/Close.png"/>
+		</Button>
+	</StackPanel>
+</UserControl>

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<RootNamespace>Bau.Libraries.LibHelper</RootNamespace>
+		<PackageId>Bau.Libraries.LibHelper</PackageId>
+		<Authors>Jose Antonio Bautista Montejo</Authors>
+		<Description>Extensors and helper functions</Description>
+		<Copyright>Creative Commons</Copyright>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<RepositoryUrl>https://github.com/jbautistam/LibHelper</RepositoryUrl>
+		<RepositoryType>GitHub</RepositoryType>
+		<PackageTags>helper, extensors</PackageTags>
+		<AssemblyVersion>1.0.0.2</AssemblyVersion>
+		<FileVersion>1.0.0.2</FileVersion>
+		<Version>1.0.2</Version>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <DebugType>none</DebugType>
+	  <DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
+
+</Project>
