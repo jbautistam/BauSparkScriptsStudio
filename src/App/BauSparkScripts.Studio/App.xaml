@@ -19,6 +19,7 @@
 			<converter:MVVMColorConverter x:Key="MVVMColorConverter" />
 			<!-- Conversores locales -->
 			<converterLocal:FileIconConverter x:Key="FileIconConverter" />
+			<converterLocal:FileNameIconConverter x:Key="FileNameIconConverter" />
 		</ResourceDictionary>
 	</Application.Resources>
 </Application>

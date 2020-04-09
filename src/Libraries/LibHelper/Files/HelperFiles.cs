@@ -112,7 +112,7 @@ namespace Bau.Libraries.LibHelper.Files
 		/// <summary>
 		///		Lista archivos recursivamente
 		/// </summary>
-		public static List<string> ListRecursive(string path)
+		public static List<string> ListRecursive(string path, string searchPattern = null)
 		{
 			List<string> files = new List<string>();
 
@@ -120,11 +120,11 @@ namespace Bau.Libraries.LibHelper.Files
 				if (Directory.Exists(path))
 				{
 					// Añade los archivos
-					foreach (string fileName in Directory.GetFiles(path))
+					foreach (string fileName in Directory.GetFiles(path, searchPattern))
 						files.Add(fileName);
 					// Añade los directorios hijos
 					foreach (string child in Directory.GetDirectories(path))
-						files.AddRange(ListRecursive(child));
+						files.AddRange(ListRecursive(child, searchPattern));
 				}
 				// Devuelve la colección de archivos
 				return files;
@@ -226,27 +226,7 @@ namespace Bau.Libraries.LibHelper.Files
 		/// </summary>
 		public static string LoadTextFile(string fileName, System.Text.Encoding encoding)
 		{	
-			System.Text.StringBuilder content = new System.Text.StringBuilder();
-
-				// Carga el archivo
-				using (StreamReader file = new StreamReader(fileName, encoding))
-				{ 
-					string data;
-
-						// Lee los datos
-						while ((data = file.ReadLine()) != null)
-						{ 
-							// Le añade un salto de línea si es necesario
-							if (content.Length > 0)
-								content.Append("\n");
-							// Añade la línea leída
-							content.Append(data);
-						}
-						// Cierra el stream
-						file.Close();
-				}
-				// Devuelve el contenido
-				return content.ToString();
+			return File.ReadAllText(fileName, encoding);
 		}
 
 		/// <summary>
@@ -301,13 +281,7 @@ namespace Bau.Libraries.LibHelper.Files
 		/// </summary>
 		public static void SaveTextFile(string fileName, string text, System.Text.Encoding encoding)
 		{	
-			using (StreamWriter file = new StreamWriter(fileName, false, encoding))
-			{ 
-				// Escribe la cadena
-				file.Write(text);
-				// Cierra el stream
-				file.Close();
-			}
+			File.WriteAllText(fileName, text, encoding);
 		}		
 
 		/// <summary>

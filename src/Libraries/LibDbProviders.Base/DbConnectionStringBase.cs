@@ -8,10 +8,16 @@ namespace Bau.Libraries.LibDbProviders.Base
 	/// </summary>
 	public abstract class DbConnectionStringBase : IConnectionString
 	{
-		protected DbConnectionStringBase(string connectionString, int timeOut = 15)
+		protected DbConnectionStringBase(string connectionString, int timeout = 15)
 		{ 
 			ConnectionString = connectionString;
-			TimeOut = timeOut;
+			TimeOut = timeout;
+		}
+
+		protected DbConnectionStringBase(Dictionary<string, string> parameters, int timeout = 15)
+		{
+			AssignParameters(parameters);
+			TimeOut = timeout;
 		}
 
 		/// <summary>

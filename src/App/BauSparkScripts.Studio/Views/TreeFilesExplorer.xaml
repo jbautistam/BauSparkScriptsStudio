@@ -12,12 +12,13 @@
 				ContextMenu="{DynamicResource ResourceKey=mnuExplorer}" 
 				ItemsSource="{Binding Path=Children}"
 				SelectedItemChanged="trvExplorer_SelectedItemChanged"
-				MouseDoubleClick="trvExplorer_MouseDoubleClick" MouseDown="trvExplorer_MouseDown">
+				MouseDoubleClick="trvExplorer_MouseDoubleClick" MouseDown="trvExplorer_MouseDown"
+				PreviewMouseLeftButtonDown="trvExplorer_PreviewMouseLeftButtonDown" PreviewMouseMove="trvExplorer_PreviewMouseMove" >
 			<TreeView.Resources>
 				<!-- Plantilla de los nodos -->
 				<HierarchicalDataTemplate DataType="{x:Type ViewModel:BaseTreeNodeViewModel}" ItemsSource="{Binding Children}">
 					<StackPanel Orientation="Horizontal">
-						<Image Width="20" Height="20" Margin="3,0" Source="{Binding Path=Icon,Converter={StaticResource FileIconConverter}}"
+						<Image Width="24" Height="24" Margin="3,0" Source="{Binding Path=FileName,Converter={StaticResource FileNameIconConverter}}"
 							 ToolTip="{Binding Path=ToolTipText}" />
 						<TextBlock Text="{Binding Text}" FontWeight="{Binding IsBold,Converter={StaticResource BoolToFontWeightConverter}}"
 								   Foreground="{Binding Path=Foreground,Converter={StaticResource MVVMColorConverter}}" 
@@ -61,20 +62,15 @@
 						</MenuItem.Icon>
 					</MenuItem>
 					<Separator/>
-					<MenuItem Header="Consulta" Command="{Binding Path=NewQueryCommand}">
+					<MenuItem Header="Abrir en el explorador" Command="{Binding Path=SeeAtExplorerCommand}">
 						<MenuItem.Icon>
-							<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/Script.png" />
+							<Image Width="16" Height="16" Source="/BauControls;component/Themes/Images/Folder.png" />
 						</MenuItem.Icon>
 					</MenuItem>
 					<Separator />
 					<MenuItem Header="Ejecutar" Command="{Binding ProcessScriptCommand}">
 						<MenuItem.Icon>
 							<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/ArrowRight.png" />
-						</MenuItem.Icon>
-					</MenuItem>
-					<MenuItem Header="Exportar" Command="{Binding ExportCommand}">
-						<MenuItem.Icon>
-							<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/Deployment.png" />
 						</MenuItem.Icon>
 					</MenuItem>
 				</ContextMenu>

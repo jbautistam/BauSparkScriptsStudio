@@ -9,6 +9,8 @@ namespace Bau.Libraries.LibDbProviders.Spark
 	{ 
 		public SparkConnectionString(string connectionString, int timeOut = 15) : base(connectionString, timeOut) {}
 
+		public SparkConnectionString(System.Collections.Generic.Dictionary<string, string> parameters, int timeOut = 15) : base(parameters, timeOut) {}
+
 		/// <summary>
 		///		Asigna el valor de un parámetro
 		/// </summary>

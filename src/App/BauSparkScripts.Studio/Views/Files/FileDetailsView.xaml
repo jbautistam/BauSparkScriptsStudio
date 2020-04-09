@@ -9,7 +9,25 @@
              mc:Ignorable="d" Loaded="UserControl_Loaded"
              d:DesignHeight="450" d:DesignWidth="800">
 	<Grid>
-		<CodeEditor:ctlEditor Grid.Row="0" Grid.Column="0" Margin="2"
-			x:Name="udtEditor" TextChanged="udtEditor_TextChanged" BorderThickness="1" BorderBrush="Black"/>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<CodeEditor:ctlEditor Grid.Row="0" Grid.Column="0" Margin="2" PositionChanged="udtEditor_PositionChanged" Drop="udtEditor_Drop" DragEnter="udtEditor_DragEnter"
+			x:Name="udtEditor" TextChanged="udtEditor_TextChanged" BorderThickness="1" BorderBrush="Black" PreviewMouseWheel="udtEditor_PreviewMouseWheel"/>
+		<!-- Barra de estado -->
+		<StatusBar Grid.Row="1" Grid.Column="0">
+			<StatusBarItem>
+				<ComboBox x:Name="cboZoom" Width="60"></ComboBox>
+			</StatusBarItem>
+			<StatusBarItem HorizontalAlignment="Right">
+				<StackPanel Orientation="Horizontal">
+					<TextBlock VerticalAlignment="Center" Text="Línea: " Margin="0,0,2,0"/>
+					<TextBlock x:Name="lblRow" VerticalAlignment="Center" Margin="0,0,10,0"/>
+					<TextBlock VerticalAlignment="Center" Text="Columna: " Margin="0,0,2,0"/>
+					<TextBlock x:Name="lblColumn"  VerticalAlignment="Center" Margin="0,0,10,0"/>
+				</StackPanel>
+			</StatusBarItem>
+		</StatusBar>
 	</Grid>
 </UserControl>

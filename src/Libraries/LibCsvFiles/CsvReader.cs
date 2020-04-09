@@ -21,16 +21,16 @@ namespace Bau.Libraries.LibCsvFiles
 		public CsvReader(string fileName, FileModel definition, List<ColumnModel> columns, int notifyAfter = 10_000)
 		{
 			FileName = fileName;
-			FileDefinition = definition;
-			Columns = columns;
+			FileDefinition = definition ?? new FileModel();
+			Columns = columns ?? new List<ColumnModel>();
 			NotifyAfter = notifyAfter;
 		}
 
 		public CsvReader(System.IO.StreamReader fileReader, FileModel definition, List<ColumnModel> columns, int notifyAfter = 10_000)
 		{
 			FileReader = fileReader;
-			FileDefinition = definition;
-			Columns = columns;
+			FileDefinition = definition ?? new FileModel();
+			Columns = columns ?? new List<ColumnModel>();
 			NotifyAfter = notifyAfter;
 		}
 
@@ -91,7 +91,12 @@ namespace Bau.Libraries.LibCsvFiles
 					{
 						// Interpreta la línea de cabecera o se la salta
 						if (MustParseFirstLine())
+						{
+							// Interpreta la línea de cabecera
 							ParseFileHeaders(line);
+							// Esta línea no debería ir al dataReader
+							line = string.Empty;
+						}
 						else if (FileDefinition.SkipFirstLine)
 							line = string.Empty;
 						// Incrementa el número de línea
@@ -197,10 +202,14 @@ namespace Bau.Libraries.LibCsvFiles
 		private List<object> ConvertFields(List<string> fields)
 		{
 			List<object> values = new List<object>();
+			int index = 0;
 
 				// Convierte cada uno de los valores
 				foreach (string field in fields)
-					values.Add(ConvertField(Columns[values.Count], field));
+					if (Columns.Count > index)
+						values.Add(ConvertField(Columns[index++], field));
+					else
+						values.Add(null);
 				// Devuelve la lista de valores
 				return values;
 		}
@@ -271,7 +280,28 @@ namespace Bau.Libraries.LibCsvFiles
 		/// </summary>
 		public Type GetFieldType(int i)
 		{
-			return _recordsValues[i].GetType();
+			if (_recordsValues == null)
+				return GetColumnType(Columns[i].Type);
+			else
+				return _recordsValues[i].GetType();
+		}
+
+		/// <summary>
+		///		Obtiene el tipo de una columna
+		/// </summary>
+		private Type GetColumnType(ColumnModel.ColumnType type)
+		{
+			switch (type)
+			{
+				case ColumnModel.ColumnType.Boolean:
+					return typeof(bool);
+				case ColumnModel.ColumnType.DateTime:
+					return typeof(DateTime);
+				case ColumnModel.ColumnType.Numeric:
+					return typeof(double);
+				default:
+					return typeof(string);
+			}
 		}
 
 		/// <summary>

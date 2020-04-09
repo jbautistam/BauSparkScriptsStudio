@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Bau.Libraries.BauMvvm.ViewModels;
 using Bau.Libraries.BauSparkScripts.Models.Connections;
@@ -12,29 +14,54 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 	public class ExecuteQueryViewModel : BaseObservableObject, IDetailViewModel
 	{
 		// Variables privadas
-		private string _header, _fileName, _query, _executionTime, _errorMessage;
+		private string _header, _fileName, _query, _lastQuery, _executionTime;
 		private DataTable _dataResults;
 		private ComboConnectionsViewModel _comboConnectionsViewModel;
-		private bool _hasError;
+		private int _actualPage, _pageSize;
+		private bool _paginateQuery;
+		private BauMvvm.ViewModels.Media.MvvmColor _executionTimeColor;
+		private bool _isExecuting;
+		private CancellationTokenSource _tokenSource;
+		private CancellationToken _cancellationToken = CancellationToken.None;
+		private System.Timers.Timer _timer;
+		private System.Diagnostics.Stopwatch _stopwatch;
 
 		public ExecuteQueryViewModel(SolutionViewModel solutionViewModel, string query) : base(false)
 		{
 			// Asigna las propiedades
 			SolutionViewModel = solutionViewModel;
 			Query = query;
-			Header = "Nueva consulta";
+			Header = "Consulta";
+			PaginateQuery = true;
+			ActualPage = 1;
+			PageSize = 10_000;
 			// Carga el combo de conexiones
 			ComboConnections = new ComboConnectionsViewModel(solutionViewModel);
 			// Asigna los comandos
-			ProcessCommand = new BaseCommand(_ => ExecuteQuery());
+			ProcessCommand = new BaseCommand(async _ => await ExecuteQueryAsync(), _ => !IsExecuting)
+									.AddListener(this, nameof(IsExecuting));
+			CancelQueryCommand = new BaseCommand(_ => CancelQuery(), _ => IsExecuting)
+													.AddListener(this, nameof(IsExecuting));
 			ExportCommand = new BaseCommand(_ => Export(), _ => DataResults?.Rows.Count > 0)
 										.AddListener(this, nameof(DataResults));
+			FirstPageCommand = new BaseCommand(async _ => await GoPageAsync(1), _ => PaginateQuery && !IsExecuting)
+									.AddListener(this, nameof(IsExecuting))
+									.AddListener(this, nameof(PaginateQuery));
+			PreviousPageCommand = new BaseCommand(async _ => await GoPageAsync(ActualPage - 1), _ => PaginateQuery && ActualPage > 1 && !IsExecuting)
+									.AddListener(this, nameof(IsExecuting))
+									.AddListener(this, nameof(PaginateQuery));
+			NextPageCommand = new BaseCommand(async _ => await GoPageAsync(ActualPage + 1), _ => PaginateQuery && !IsExecuting)
+									.AddListener(this, nameof(IsExecuting))
+									.AddListener(this, nameof(PaginateQuery));
+			LastPageCommand = new BaseCommand(async _ => await GoPageAsync(ActualPage + 1), _ => PaginateQuery && !IsExecuting)
+									.AddListener(this, nameof(IsExecuting))
+									.AddListener(this, nameof(PaginateQuery));
 		}
 
 		/// <summary>
 		///		Ejecuta la consulta
 		/// </summary>
-		private void ExecuteQuery()
+		private async Task ExecuteQueryAsync()
 		{
 			if (string.IsNullOrWhiteSpace(Query))
 				SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("Introduzca una consulta para ejecutar");
@@ -46,27 +73,99 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 						SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("Seleccione una conexión");
 					else
 					{
-						System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+						(Application.Connections.Models.ArgumentListModel arguments, string error) = SolutionViewModel.ConnectionExecutionViewModel.GetParameters();
 
-							// Limpia los datos
-							DataResults = null;
-							ErrorMessage = string.Empty;
-							// Inicia el temporizador
-							stopwatch.Start();
-							// Ejecuta la consulta
-							try
+							if (!string.IsNullOrWhiteSpace(error))
+								SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage(error);
+							else
 							{
-								DataResults = SolutionViewModel.MainViewModel.Manager.GetDatatableQuery(connection, Query, TimeSpan.FromMinutes(5));
+								// Limpia los datos
+								DataResults = null;
+								// Inicializa el temporizador
+								_timer = new System.Timers.Timer(TimeSpan.FromMilliseconds(500).TotalMilliseconds);
+								_stopwatch = new System.Diagnostics.Stopwatch();
+								// Indica que se está ejecutando una tarea y arranca el temporizador
+								IsExecuting = true;
+								_timer.Elapsed += (sender, args) => ExecutionTime = _stopwatch.Elapsed.ToString();
+								_timer.Start();
+								_stopwatch.Start();
+								ExecutionTimeColor = BauMvvm.ViewModels.Media.MvvmColor.Red;
+								// Obtiene el token de cancelación
+								_tokenSource = new CancellationTokenSource();
+								_cancellationToken = _tokenSource.Token;
+								// Ejecuta la consulta
+								try
+								{
+									// Actualiza la página actual si es una consulta nueva
+									if (string.IsNullOrWhiteSpace(_lastQuery) || !Query.Equals(_lastQuery, StringComparison.CurrentCultureIgnoreCase))
+										ActualPage = 1;
+									// Carga la consulta
+									if (PaginateQuery)
+										DataResults = await SolutionViewModel.MainViewModel.Manager.GetDatatableQueryAsync(connection, Query, arguments, ActualPage, PageSize, 
+																														   connection.TimeoutExecuteScript, 
+																														   _cancellationToken);
+									else
+										DataResults = await SolutionViewModel.MainViewModel.Manager.GetDatatableQueryAsync(connection, Query, arguments, 0, 0,
+																														   connection.TimeoutExecuteScript, 
+																														   _cancellationToken);
+									// Guarda la consulta que se acaba de lanzar
+									_lastQuery = Query;
+								}
+								catch (Exception exception)
+								{
+									SolutionViewModel.MainViewModel.Manager.Logger.Default.LogItems.Error($"Error al ejecutar la consulta. {exception.Message}");
+								}
+								// Detiene la ejecucion
+								StopQuery();
 							}
-							catch (Exception exception)
-							{
-								ErrorMessage = $"Error al ejecutar la consulta. {exception.Message}";
-							}
-							// Detiene el temporizador y ajusta el tiempo
-							stopwatch.Stop();
-							ExecutionTime = $"{stopwatch.Elapsed}";
 					}
 			}
+		}
+
+		/// <summary>
+		///		Detiene la ejecución
+		/// </summary>
+		private void StopQuery()
+		{
+			// Detiene los temporizadores
+			_timer.Stop();
+			_stopwatch.Stop();
+			// Inicializa el token de cancelación
+			_cancellationToken = CancellationToken.None;
+			// Indica que ya no se está ejecutando
+			ExecutionTimeColor = BauMvvm.ViewModels.Media.MvvmColor.Black;
+			IsExecuting = false;
+			// Log
+			SolutionViewModel.MainViewModel.Manager.Logger.Flush();
+
+		}
+
+		/// <summary>
+		///		Cancela la ejecución de la consulta
+		/// </summary>
+		private void CancelQuery()
+		{
+			if (IsExecuting && _cancellationToken != null && _cancellationToken != CancellationToken.None)
+			{
+				if (_cancellationToken.CanBeCanceled)
+				{
+					// Cancela las tareas
+					_tokenSource.Cancel();
+					// Log
+					SolutionViewModel.MainViewModel.MainController.Logger.Default.LogItems.Error("Consulta cancelada");
+					// Indica que ya no está en ejecución
+					StopQuery();
+				}
+			}
+		}
+
+		/// <summary>
+		///		Salta a una página de la consulta
+		/// </summary>
+		private async Task GoPageAsync(int nextPage)
+		{
+			ActualPage = nextPage;
+			await ExecuteQueryAsync();
 		}
 
 		/// <summary>
@@ -89,7 +188,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 				// Graba el archivo
 				LibHelper.Files.HelperFiles.SaveTextFile(FileName, Query, System.Text.Encoding.UTF8);
 				// Actualiza el árbol
-				SolutionViewModel.TreeConnectionsViewModel.Load();
+				SolutionViewModel.TreeFoldersViewModel.Load();
 				// Indica que no ha habido modificaciones
 				IsUpdated = false;
 			}
@@ -170,34 +269,30 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 		}
 
 		/// <summary>
-		///		Tiempo de ejecución
+		///		Indica si se está ejecutando una tarea
+		/// </summary>
+		public bool IsExecuting
+		{
+			get { return _isExecuting; }
+			set { CheckProperty(ref _isExecuting, value); }
+		}
+
+		/// <summary>
+		///		Tiempo de ejecución de la última consulta
 		/// </summary>
 		public string ExecutionTime
 		{
 			get { return _executionTime; }
 			set { CheckProperty(ref _executionTime, value); }
 		}
-
+		
 		/// <summary>
-		///		Mensaje de error
+		///		Color del texto del tiempo de ejecución
 		/// </summary>
-		public string ErrorMessage
+		public BauMvvm.ViewModels.Media.MvvmColor ExecutionTimeColor
 		{
-			get { return _errorMessage; }
-			set 
-			{ 
-				if (CheckProperty(ref _errorMessage, value))
-					HasError = !string.IsNullOrEmpty(value);
-			}
-		}
-
-		/// <summary>
-		///		Indica si ha habido algún error al procesar la consulta
-		/// </summary>
-		public bool HasError
-		{
-			get { return _hasError; }
-			set { CheckProperty(ref _hasError, value); }
+			get { return _executionTimeColor; }
+			set { CheckObject(ref _executionTimeColor, value); }
 		}
 
 		/// <summary>
@@ -228,13 +323,65 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 		}
 
 		/// <summary>
+		///		Indica si se debe paginar la consulta
+		/// </summary>
+		public bool PaginateQuery
+		{
+			get { return _paginateQuery; }
+			set { CheckProperty(ref _paginateQuery, value); }
+		}
+
+		/// <summary>
+		///		Página actual
+		/// </summary>
+		public int ActualPage
+		{
+			get { return _actualPage; }
+			set { CheckProperty(ref _actualPage, value); }
+		}
+
+		/// <summary>
+		///		Tamaño de página
+		/// </summary>
+		public int PageSize
+		{
+			get { return _pageSize; }
+			set { CheckProperty(ref _pageSize, value); }
+		}
+
+		/// <summary>
 		///		Comando para ejecutar la consulta
 		/// </summary>
 		public BaseCommand ProcessCommand { get; }
 
 		/// <summary>
+		///		Comando para cancelar la ejecución de un script
+		/// </summary>
+		public BaseCommand CancelQueryCommand { get; }
+
+		/// <summary>
 		///		Comando para grabar el resultado de una consulta
 		/// </summary>
 		public BaseCommand ExportCommand { get; }
+
+		/// <summary>
+		///		Comando para ver la primera página
+		/// </summary>
+		public BaseCommand FirstPageCommand { get; }
+
+		/// <summary>
+		///		Comando para ver la primera página
+		/// </summary>
+		public BaseCommand PreviousPageCommand { get; }
+
+		/// <summary>
+		///		Comando para ver la primera página
+		/// </summary>
+		public BaseCommand NextPageCommand { get; }
+
+		/// <summary>
+		///		Comando para ver la primera página
+		/// </summary>
+		public BaseCommand LastPageCommand { get; }
 	}
 }

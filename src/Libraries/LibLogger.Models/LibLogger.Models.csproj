@@ -5,6 +5,11 @@
     <RootNamespace>Bau.LibrariesLibLogger.Models</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Metrics\Base\SetBaseModel.cs" />
     <Compile Remove="Metrics\Base\SetBaseModelDictionary.cs" />

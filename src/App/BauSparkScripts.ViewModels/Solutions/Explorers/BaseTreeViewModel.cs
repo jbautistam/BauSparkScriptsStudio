@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
 
 using Bau.Libraries.BauMvvm.ViewModels;
 using Bau.Libraries.BauMvvm.ViewModels.Forms.ControlItems;
@@ -21,12 +22,9 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers
 			// Asigna las propiedades
 			SolutionViewModel = solutionViewModel;
 			Children = new ObservableCollection<IHierarchicalViewModel>();
+			ContextUI = SynchronizationContext.Current;
 			// Asigna los comandos
 			OpenPropertiesCommand = new BaseCommand(parameter => OpenProperties(), parameter => CanExecuteAction(nameof(OpenPropertiesCommand)))
-										.AddListener(this, nameof(SelectedNode));
-			CopyCommand = new BaseCommand(parameter => ExecuteAction(nameof(CopyCommand)), parameter => CanExecuteAction(nameof(CopyCommand)))
-										.AddListener(this, nameof(SelectedNode));
-			PasteCommand = new BaseCommand(parameter => ExecuteAction(nameof(PasteCommand)), parameter => CanExecuteAction(nameof(PasteCommand)))
 										.AddListener(this, nameof(SelectedNode));
 			DeleteCommand = new BaseCommand(parameter => DeleteItem(), parameter => CanExecuteAction(nameof(DeleteCommand)))
 										.AddListener(this, nameof(SelectedNode));
@@ -173,18 +171,13 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers
 		public BaseCommand OpenPropertiesCommand { get; }
 
 		/// <summary>
-		///		Comando para copiar un nodo
-		/// </summary>
-		public BaseCommand CopyCommand { get; }
-
-		/// <summary>
-		///		Comando para pegar un nodo
-		/// </summary>
-		public BaseCommand PasteCommand { get; }
-
-		/// <summary>
 		///		Comando para borrar un nodo
 		/// </summary>
 		public BaseCommand DeleteCommand { get; }
+
+		/// <summary>
+		///		Contexto de sincronización
+		/// </summary>
+		internal SynchronizationContext ContextUI { get; }
 	}
 }

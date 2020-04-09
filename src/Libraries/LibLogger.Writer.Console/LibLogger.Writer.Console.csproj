@@ -5,6 +5,11 @@
     <RootNamespace>Bau.Libraries.LibLogger.Writer.Console</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\LibLogger.Interfaces\LibLogger.Interfaces.csproj" />
   </ItemGroup>

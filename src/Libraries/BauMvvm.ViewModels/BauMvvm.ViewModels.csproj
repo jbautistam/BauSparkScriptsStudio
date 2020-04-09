@@ -6,6 +6,11 @@
     <RootNamespace>Bau.Libraries.BauMvvm.ViewModels</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Dialogs\**" />
     <Compile Remove="EventArguments\**" />

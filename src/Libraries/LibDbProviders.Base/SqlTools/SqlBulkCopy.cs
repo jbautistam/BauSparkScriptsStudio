@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Bau.Libraries.LibDbProviders.Base.SqlTools
 {
@@ -29,7 +32,7 @@ namespace Bau.Libraries.LibDbProviders.Base.SqlTools
 					blockRecords++;
 					if (blockRecords % recordsPerBlock == 0)
 					{
-						// Confirma la transacción
+						// Confirma la transacción y abre una nueva
 						provider.Commit();
 						provider.BeginTransaction();
 						// Reinicia el número de registros del bloque
@@ -40,6 +43,46 @@ namespace Bau.Libraries.LibDbProviders.Base.SqlTools
 				}
 				// Cierra la transacción
 				if (blockRecords != 0)
+					provider.Commit();
+				// Devuelve el número de registros copiados
+				return records;
+		}
+
+		/// <summary>
+		///		Copia masiva de un <see cref="IDataReader"/> sobre una tabla de forma asíncrona
+		/// </summary>
+		public async Task<long> ProcessAsync(IDbProvider provider, IDataReader reader, string table, Dictionary<string, string> mappings, int recordsPerBlock, 
+											 TimeSpan timeout, CancellationToken cancellationToken)
+		{
+			long records = 0, blockRecords = 0;
+			Dictionary<string, string> mappingsConverted = Convert(reader, mappings);
+			string sql = GetInsertCommand(table, mappingsConverted);
+
+				// Abre una transacción
+				provider.BeginTransaction();
+				// Lee los registros e inserta
+				if (!cancellationToken.IsCancellationRequested)
+					while (await (reader as DbDataReader).ReadAsync(cancellationToken))
+					{
+						// Ejecuta el comando de inserción
+						await provider.ExecuteAsync(sql, GetParameters(reader, mappingsConverted), CommandType.Text, timeout, cancellationToken);
+						// Cierra la transacción
+						blockRecords++;
+						if (blockRecords % recordsPerBlock == 0)
+						{
+							// Confirma la transacción y abre una nueva
+							provider.Commit();
+							provider.BeginTransaction();
+							// Reinicia el número de registros del bloque
+							blockRecords = 0;
+						}
+						// Incrementa el número de registros
+						records++;
+					}
+				// Cancela o confirma la transacción si es necesario
+				if (cancellationToken.IsCancellationRequested)
+					provider.RollBack();
+				else if (blockRecords != 0)
 					provider.Commit();
 				// Devuelve el número de registros copiados
 				return records;

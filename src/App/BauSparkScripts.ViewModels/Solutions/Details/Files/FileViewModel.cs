@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 using Bau.Libraries.BauMvvm.ViewModels;
 using Bau.Libraries.BauSparkScripts.Models.Connections;
+using Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Connections;
 
 namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Files
 {
@@ -11,6 +12,8 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Files
 	/// </summary>
 	public class FileViewModel : BaseObservableObject, IDetailViewModel
 	{
+		// Eventos públicos
+		public event EventHandler<EventArguments.EditorSelectedTextRequiredEventArgs> SelectedTextRequired;
 		// Variables privadas
 		private string _header, _fileName, _content;
 		private Connections.ComboConnectionsViewModel _comboConnectionsViewModel;
@@ -53,7 +56,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Files
 				// Graba el archivo
 				LibHelper.Files.HelperFiles.SaveTextFile(FileName, Content, System.Text.Encoding.UTF8);
 				// Actualiza el árbol
-				SolutionViewModel.TreeConnectionsViewModel.Load();
+				SolutionViewModel.TreeFoldersViewModel.Load();
 				// Indica que no ha habido modificaciones
 				IsUpdated = false;
 			}
@@ -62,7 +65,8 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Files
 		/// <summary>
 		///		Ejecuta el script
 		/// </summary>
-		internal async Task ExecuteScriptAsync(ConnectionModel connection, LibDataStructures.Collections.NormalizedDictionary<object> parameters)
+		internal async Task ExecuteScriptAsync(ConnectionModel connection, Application.Connections.Models.ArgumentListModel arguments,
+											   System.Threading.CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrWhiteSpace(Content))
 				SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("Introduzca una consulta para ejecutar");
@@ -72,11 +76,31 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Files
 				using (LibLogger.Models.Log.BlockLogModel block = SolutionViewModel.MainViewModel.Manager.Logger.Default.CreateBlock(LibLogger.Models.Log.LogModel.LogType.Info,
 																																	 $"Comienza la ejecución de la consulta"))
 				{
-					// Ejecuta la consulta
-					await SolutionViewModel.MainViewModel.Manager.ExecuteQueryAsync(connection, Content, parameters, TimeSpan.FromMinutes(5));
-					// Muestra el tiempo de ejecución
-					block.Info($"Tiempo de ejecución: {SolutionViewModel.ConnectionExecutionViewModel.ExecutionTime}");
+					string selectedText = GetEditorSelectedText();
+
+						// Ejecuta la consulta
+						if (!string.IsNullOrEmpty(selectedText))
+							await SolutionViewModel.MainViewModel.Manager.ExecuteQueryAsync(connection, selectedText, arguments, 
+																							connection.TimeoutExecuteScript, cancellationToken);
+						else
+							await SolutionViewModel.MainViewModel.Manager.ExecuteQueryAsync(connection, Content, arguments, 
+																							connection.TimeoutExecuteScript, cancellationToken);
+						// Muestra el tiempo de ejecución
+						block.Info($"Tiempo de ejecución: {SolutionViewModel.ConnectionExecutionViewModel.ExecutionTime}");
 				}
+		}
+
+		/// <summary>
+		///		Lanza un evento para solicitar el texto seleccionado al editor
+		/// </summary>
+		private string GetEditorSelectedText()
+		{
+			EventArguments.EditorSelectedTextRequiredEventArgs eventArgs = new EventArguments.EditorSelectedTextRequiredEventArgs();
+
+				// Lanza el evento
+				SelectedTextRequired?.Invoke(this, eventArgs);
+				// Recupera el texto
+				return eventArgs.SelectedText;
 		}
 
 		/// <summary>

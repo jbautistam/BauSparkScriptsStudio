@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Bau.Libraries.LibDbProviders.SqlServer</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LibDbProviders.Base\LibDbProviders.Base.csproj" />
+  </ItemGroup>
+
+</Project>

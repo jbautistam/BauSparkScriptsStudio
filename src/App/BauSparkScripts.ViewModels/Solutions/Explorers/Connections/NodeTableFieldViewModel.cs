@@ -22,6 +22,18 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Connectio
 		/// </summary>
 		protected override void LoadNodes()
 		{
+			// No hace nada, simplemente implementa la clase
+		}
+
+		/// <summary>
+		///		Obtiene el texto de la cadena SQL asociada al campo
+		/// </summary>
+		public string GetSqlSelect(bool fullSql)
+		{
+			if (TreeViewModel is TreeConnectionsViewModel trvTree)
+				return trvTree.GetSqlSelect(this, fullSql);
+			else
+				return string.Empty;
 		}
 
 		/// <summary>

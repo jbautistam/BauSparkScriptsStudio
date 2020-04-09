@@ -56,6 +56,20 @@ namespace Bau.Libraries.LibCsvFiles
 		}
 
 		/// <summary>
+		///		Escribe las cabeceras
+		/// </summary>
+		public void WriteHeaders(List<ColumnModel> columns)
+		{
+			List<string> headers = new List<string>();
+
+				// Añade las cabeceras
+				foreach (ColumnModel column in columns)
+					headers.Add(column.Name);
+				// Escribe las cabeceras
+				WriteLine(headers);
+		}
+
+		/// <summary>
 		///		Escribe una línea
 		/// </summary>
 		public void WriteRow(List<(ColumnModel.ColumnType type, object value)> values)
@@ -67,6 +81,42 @@ namespace Bau.Libraries.LibCsvFiles
 					rowData.Add(ConvertValue(type, value));
 				// Escribe la línea
 				WriteLine(rowData);
+		}
+
+		/// <summary>
+		///		Escribe una línea
+		/// </summary>
+		public void WriteRow(List<object> values)
+		{
+			List<string> rowData = new List<string>();
+
+				// Convierte los valores
+				foreach (object value in values)
+					rowData.Add(ConvertValue(GetColumnType(value), value));
+				// Escribe la línea
+				WriteLine(rowData);
+		}
+
+		/// <summary>
+		///		Obtiene el tipo de columna de un objeto
+		/// </summary>
+		private ColumnModel.ColumnType GetColumnType(object value)
+		{
+			switch (value)
+			{
+				case bool _:
+					return ColumnModel.ColumnType.Boolean;
+				case DateTime _:
+					return ColumnModel.ColumnType.DateTime;
+				case int _:
+				case float _:
+				case double _:
+				case long _:
+				case decimal _:
+					return ColumnModel.ColumnType.Numeric;
+				default:
+					return ColumnModel.ColumnType.String;
+			}
 		}
 
 		/// <summary>

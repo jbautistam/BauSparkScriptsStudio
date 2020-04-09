@@ -40,6 +40,23 @@ namespace Bau.Libraries.BauMvvm.Views.Controllers
 		public SystemControllerEnums.ResultType ShowInputString(string message, ref string input)
 		{
 			SystemControllerEnums.ResultType type;
+			Forms.Dialogs.InputBoxMonolineView view = new Forms.Dialogs.InputBoxMonolineView(this, message, input);
+
+				// Muestra el cuadro de diálogo
+				type = new HostDialogsController(ApplicationName, MainWindow).ShowDialog(MainWindow, view);
+				// Si se ha aceptado, recoge el texto
+				if (type == SystemControllerEnums.ResultType.Yes)
+					input = view.InputText;
+				// Devuelve el resultado
+				return type;
+		}
+
+		/// <summary>
+		///		Muestra un cuadro de mensaje para introducir un texto multilínea
+		/// </summary>
+		public SystemControllerEnums.ResultType ShowInputMultilineString(string message, ref string input)
+		{
+			SystemControllerEnums.ResultType type;
 			Forms.Dialogs.InputBoxView view = new Forms.Dialogs.InputBoxView(this, message, input);
 
 				// Muestra el cuadro de diálogo

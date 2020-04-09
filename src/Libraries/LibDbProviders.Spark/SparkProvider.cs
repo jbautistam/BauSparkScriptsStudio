@@ -12,7 +12,10 @@ namespace Bau.Libraries.LibDbProviders.Spark
 	/// </summary>
 	public class SparkProvider : DbProviderBase
 	{ 
-		public SparkProvider(IConnectionString connectionString) : base(connectionString) {}
+		public SparkProvider(IConnectionString connectionString) : base(connectionString) 
+		{
+			SqlParser = new Parser.SparkSelectParser();
+		}
 
 		/// <summary>
 		///		Crea la conexión
@@ -62,9 +65,9 @@ namespace Bau.Libraries.LibDbProviders.Spark
 		/// <summary>
 		///		Obtiene el esquema
 		/// </summary>
-		public override Base.Schema.SchemaDbModel GetSchema()
+		public async override System.Threading.Tasks.Task<Base.Schema.SchemaDbModel> GetSchemaAsync(TimeSpan timeout, System.Threading.CancellationToken cancellationToken)
 		{
-			return new SparkSchemaReader().GetSchema(this);
+			return await new Parser.SparkSchemaReader().GetSchemaAsync(this, timeout, cancellationToken);
 		}
 	}
 }

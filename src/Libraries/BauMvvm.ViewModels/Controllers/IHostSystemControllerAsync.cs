@@ -33,5 +33,10 @@ namespace Bau.Libraries.BauMvvm.ViewModels.Controllers
 		///		Muestra un cuadro de diálogo para introducir un texto
 		/// </summary>
 		Task<(SystemControllerEnums.ResultType result, string input)> ShowInputStringAsync(string message, string defaultValue = null);
+
+		/// <summary>
+		///		Muestra un cuadro de diálogo para introducir un texto multilínea
+		/// </summary>
+		Task<(SystemControllerEnums.ResultType result, string input)> ShowInputMultilineStringAsync(string message, string defaultValue = null);
 	}
 }

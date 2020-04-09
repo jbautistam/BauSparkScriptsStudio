@@ -70,7 +70,7 @@ namespace Bau.Libraries.LibJsonConversor
 			switch (type)
 			{ 
 				case JTokenType.Integer:
-					return typeof(Int64);
+					return typeof(int);
 				case JTokenType.Float:
 					return typeof(double);
 				case JTokenType.String:

@@ -30,6 +30,8 @@ namespace Bau.SparkScripts.Studio.Converters
 			{ 
 				case BaseTreeNodeViewModel.IconType.Connection:
 					return "/BauSparkScripts.Studio;component/Resources/Images/Connection.png";
+				case BaseTreeNodeViewModel.IconType.Deployment:
+					return "/BauSparkScripts.Studio;component/Resources/Images/Deployment.png";
 				case BaseTreeNodeViewModel.IconType.Project:
 					return "/BauSparkScripts.Studio;component/Resources/Images/Project.png";
 				case BaseTreeNodeViewModel.IconType.Path:
@@ -42,6 +44,8 @@ namespace Bau.SparkScripts.Studio.Converters
 					return "/BauSparkScripts.Studio;component/Resources/Images/Key.png";
 				case BaseTreeNodeViewModel.IconType.Field:
 					return "/BauSparkScripts.Studio;component/Resources/Images/Field.png";
+				case BaseTreeNodeViewModel.IconType.Error:
+					return "/BauSparkScripts.Studio;component/Resources/Images/DataError.png";
 				default:
 					return null;
 			}

@@ -90,6 +90,23 @@
       <Version>5.0.4</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\PythonHighLight.xml">
+      <SubType>Designer</SubType>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\Cut.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\Copy.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\Delete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\Paste.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

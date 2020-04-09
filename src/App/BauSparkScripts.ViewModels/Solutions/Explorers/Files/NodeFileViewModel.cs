@@ -55,6 +55,62 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 		}
 
 		/// <summary>
+		///		Obtiene la cadena SQL asociada al nombre del archivo o a una SELECT con los nombres de campo
+		/// </summary>
+		public string GetSqlSelect(bool fullSql)
+		{
+			string result = string.Empty;
+
+				// Obtiene la cadena SQL dependiendo del tipo de archivo
+				if (FileName.EndsWith(".parquet", StringComparison.CurrentCultureIgnoreCase))
+				{
+					if (fullSql)
+						result = GetSqlSelectParquet();
+					else
+						result += $"parquet.`{FileName}`";
+				}
+				else if (FileName.EndsWith(".csv", StringComparison.CurrentCultureIgnoreCase))
+					result += $"csv.`{FileName}`";
+				// Devuelve el resultado
+				return result;
+		}
+
+		/// <summary>
+		///		Obtiene la cadena SQL de consulta de un archivo parquet
+		/// </summary>
+		private string GetSqlSelectParquet()
+		{
+			string sql = "SELECT ";
+			int length = 80;
+
+				// Añade los nombres de campos
+				using (LibParquetFiles.ParquetDataReader reader = new LibParquetFiles.ParquetDataReader(FileName))
+				{
+					// Abre el archivo
+					reader.Open();
+					// Añade los nombres de campo
+					for (int index = 0; index < reader.FieldCount; index++)
+					{
+						// Añade un salto de línea si es necesario
+						if (sql.Length > length)
+						{
+							sql += Environment.NewLine + "\t\t";
+							length += 80;
+						}
+						// Nombre de campo
+						sql += $" `{reader.GetName(index)}`";
+						// Añade la coma si es necesario
+						if (index < reader.FieldCount -1)
+							sql += ", ";
+					}
+				}
+				// Añade el nombre de tabla
+				sql += Environment.NewLine + $"\tFROM parquet.`{FileName}`";
+				// Devuelve la cadena creada
+				return sql;
+		}
+
+		/// <summary>
 		///		Nombre de archivo
 		/// </summary>
 		public string FileName

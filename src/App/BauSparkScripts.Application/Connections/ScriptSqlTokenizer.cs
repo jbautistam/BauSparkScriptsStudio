@@ -48,14 +48,14 @@ namespace Bau.Libraries.BauSparkScripts.Application.Connections
 		/// <summary>
 		///		Interpreta una cadena SQL separando los comentarios
 		/// </summary>
-		internal List<ScriptSqlPartModel> Parse(string sql, NormalizedDictionary<object> parameters)
+		internal List<ScriptSqlPartModel> Parse(string sql, NormalizedDictionary<object> variables)
 		{
 			List<ScriptSqlPartModel> sqlParts = Tokenize(sql);
 
 				// Reemplaza las variables
 				foreach (ScriptSqlPartModel sqlPart in sqlParts)
 					if (sqlPart.Type == ScriptSqlPartModel.PartType.Sql)
-						sqlPart.Content	= ReplaceVariables(sqlPart.Content, parameters);
+						sqlPart.Content	= ReplaceVariables(sqlPart.Content, variables);
 				// Devuelve las secciones de la cadena SQL
 				return sqlParts;
 		}

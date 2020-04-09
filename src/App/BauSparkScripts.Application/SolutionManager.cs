@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Bau.Libraries.LibLogger.Core;
@@ -16,6 +17,7 @@ namespace Bau.Libraries.BauSparkScripts.Application
 		{
 			Logger = logger;
 			PathConfiguration = pathConfiguration;
+			ConnectionManager = new Connections.ConnectionManager(this);
 		}
 
 		/// <summary>
@@ -49,33 +51,37 @@ namespace Bau.Libraries.BauSparkScripts.Application
 		/// <summary>
 		///		Carga el esquema de una conexión
 		/// </summary>
-		public void LoadSchema(ConnectionModel connection)
+		public async Task LoadSchemaAsync(ConnectionModel connection, CancellationToken cancellationToken)
 		{
-			new Connections.ConnectionManager(this, connection).LoadSchema();
+			await ConnectionManager.LoadSchemaAsync(connection, cancellationToken);
 		}
 
 		/// <summary>
 		///		Ejecuta una consulta sobre una conexión
 		/// </summary>
-		public async Task ExecuteQueryAsync(ConnectionModel connection, string query, LibDataStructures.Collections.NormalizedDictionary<object> parameters, TimeSpan timeOut)
+		public async Task ExecuteQueryAsync(ConnectionModel connection, string query, 
+											Connections.Models.ArgumentListModel arguments, 
+											TimeSpan timeout, CancellationToken cancellationToken)
 		{
-			await Task.Run(() => new Connections.ConnectionManager(this, connection).ExecuteQuery(query, parameters, timeOut));
+			await ConnectionManager.ExecuteQueryAsync(connection, query, arguments, timeout, cancellationToken);
 		}
 
 		/// <summary>
-		///		Obtiene un <see cref="System.Data.DataColumn"/> con una consulta sobre una conexión
+		///		Obtiene un <see cref="System.Data.DataTable"/> paginada con una consulta sobre una conexión
 		/// </summary>
-		public System.Data.DataTable GetDatatableQuery(ConnectionModel connection, string query, TimeSpan? timeOut)
+		public async Task<System.Data.DataTable> GetDatatableQueryAsync(ConnectionModel connection, string query, 
+																		Connections.Models.ArgumentListModel arguments, 
+																		int actualPage, int pageSize, TimeSpan timeout, CancellationToken cancellationToken)
 		{
-			return new Connections.ConnectionManager(this, connection).GetDatatableQuery(query, timeOut);
+			return await ConnectionManager.GetDatatableQueryAsync(connection, query, arguments, actualPage, pageSize, timeout, cancellationToken);
 		}
 
 		/// <summary>
 		///		Exporta un directorio de archivos al formato de notebooks de Databricks
 		/// </summary>
-		public void ExportToDataBricks(string path, string targetPath, LibDataStructures.Collections.NormalizedDictionary<object> parameters)
+		public void ExportToDataBricks(Models.Deployments.DeploymentModel deployment)
 		{
-			new Controllers.Databricks.DatabrickExporter(this).Export(path, targetPath, parameters);
+			new Controllers.Databricks.DatabrickExporter(this).Export(deployment);
 		}
 
 		/// <summary>
@@ -87,5 +93,10 @@ namespace Bau.Libraries.BauSparkScripts.Application
 		///		Directorio de configuración
 		/// </summary>
 		public string PathConfiguration { get; private set; }
+
+		/// <summary>
+		///		Manager de conexiones
+		/// </summary>
+		private Connections.ConnectionManager ConnectionManager { get; }
 	}
 }

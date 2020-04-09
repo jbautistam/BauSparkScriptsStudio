@@ -10,7 +10,7 @@ namespace Bau.Libraries.LibParquetFiles
 	/// <summary>
 	///		Clase de escritura sobre archivos Parquet
 	/// </summary>
-	public class ParquetDataWriter
+	public class ParquetDataWriter : IDisposable
 	{
 		// Eventos públicos
 		public event EventHandler<EventArguments.AffectedEvntArgs> WriteBlock;
@@ -118,22 +118,14 @@ namespace Bau.Libraries.LibParquetFiles
 		private List<(string, FieldType)> GetColumnsSchema(System.Data.IDataReader reader)
 		{
 			List<(string, FieldType)> columns = new List<(string, FieldType)>();
-			System.Data.DataTable schema = reader.GetSchemaTable();
 
-				// Obtiene las columnas del dataReader
-				foreach (System.Data.DataRow dataRow in schema.Rows)
+				// Obtiene el esquema del dataReader
+				for (int index = 0; index < reader.FieldCount; index++)
 				{
-					(string name, FieldType type) column = (string.Empty, FieldType.Unknown);
-
-						// Busca las propiedades en las columnas
-						foreach (System.Data.DataColumn readerColumn in schema.Columns)
-							if (readerColumn.ColumnName.Equals("ColumnName", StringComparison.CurrentCultureIgnoreCase))
-								column.name = dataRow[readerColumn].ToString();
-							else if (readerColumn.ColumnName.Equals("DataType", StringComparison.CurrentCultureIgnoreCase))
-								column.type = GetColumnSchemaType((Type) dataRow[readerColumn]);
-						// Añade la columna a la lista
-						if (!string.IsNullOrWhiteSpace(column.name) && column.type != FieldType.Unknown)
-							columns.Add(column);
+					if (!string.IsNullOrWhiteSpace(reader.GetName(index)))
+						columns.Add((reader.GetName(index), GetColumnSchemaType(reader.GetFieldType(index))));
+					else
+						columns.Add(($"Column{index}", GetColumnSchemaType(reader.GetFieldType(index))));
 				}
 				// Devuelve la colección de columnas
 				return columns;
@@ -271,6 +263,31 @@ namespace Bau.Libraries.LibParquetFiles
 		}
 
 		/// <summary>
+		///		Libera la memoria
+		/// </summary>
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!Disposed)
+			{
+				// Libera la memoria
+				if (disposing)
+				{
+					// TODO: elimine el estado administrado (objetos administrados).
+				}
+				// Indica que se ha liberado la memoria
+				Disposed = true;
+			}
+		}
+
+		/// <summary>
+		///		Libera la memoria
+		/// </summary>
+		public void Dispose()
+		{
+			Dispose(true);
+		}
+
+		/// <summary>
 		///		Nombre de archivo
 		/// </summary>
 		public string FileName { get; }
@@ -279,5 +296,10 @@ namespace Bau.Libraries.LibParquetFiles
 		///		Número de registros después de los que se debe notificar
 		/// </summary>
 		public int NotifyAfter { get; }
+
+		/// <summary>
+		///		Indica si se ha liberado la memoria
+		/// </summary>
+		public bool Disposed { get; private set; }
 	}
 }

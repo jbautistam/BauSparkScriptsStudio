@@ -18,6 +18,7 @@ namespace Bau.Libraries.LibCsvFiles.Models
 			TrueValue = "1";
 			FalseValue = "0";
 			Separator = ",";
+			SkipFirstLine = true;
 		}
 
 		/// <summary>

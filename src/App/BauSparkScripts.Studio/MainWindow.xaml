@@ -47,6 +47,23 @@
 					</MenuItem.Icon>
 				</MenuItem>
 			</MenuItem>
+
+			<MenuItem Header="_Editar">
+				<MenuItem Header="_Buscar" Click="Search_Click">
+					<MenuItem.Icon>
+						<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/Search.png" />
+					</MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
+
+			<MenuItem Header="_Herramientas">
+				<MenuItem Header="_Configuración" Click="Configuration_Click">
+					<MenuItem.Icon>
+						<Image Width="16" Height="16" Source="/BauControls;component/Themes/Images/Tag.png" />
+					</MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
+
 			<MenuItem Header="_Ventana">
 				<MenuItem Header="Cambiar tema" Click="CloseAllWindows_Click">
 					<MenuItem.Icon>
@@ -95,8 +112,13 @@
 					Command="{Binding Path=SolutionViewModel.ConnectionExecutionViewModel.OpenParametersFileCommand}">
 				<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/File.png" />
 			</Button>
-			<Button Margin="5,0,0,0" ToolTip="Ejecutar" Command="{Binding Path=SolutionViewModel.ConnectionExecutionViewModel.ExecuteScripCommand}">
+			<Button Margin="5,0,0,0" ToolTip="Ejecutar" Command="{Binding Path=SolutionViewModel.ConnectionExecutionViewModel.ExecuteScripCommand}"
+					Visibility="{Binding Path=SolutionViewModel.ConnectionExecutionViewModel.IsExecuting,Converter={StaticResource InverseBoolToVisibilityConverter}}">
 				<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/ArrowRight.png" />
+			</Button>
+			<Button Margin="5,0,0,0" ToolTip="Cancelar" Command="{Binding Path=SolutionViewModel.ConnectionExecutionViewModel.CancelScriptExecutionCommand}"
+					Visibility="{Binding Path=SolutionViewModel.ConnectionExecutionViewModel.IsExecuting,Converter={StaticResource BoolToVisibilityConverter}}">
+				<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/Stop.png" />
 			</Button>
 			<Label Content="{Binding Path=SolutionViewModel.ConnectionExecutionViewModel.ExecutionTime}" Margin="2"
 				   Foreground="{Binding Path=SolutionViewModel.ConnectionExecutionViewModel.ExecutionTimeColor,Converter={StaticResource MVVMColorConverter}}"/>
@@ -185,15 +207,35 @@
 		</xcad:DockingManager>
 
 		-->
-		<StatusBar Grid.Column="0" Grid.Row="3" Margin="0">
+
+		<!-- Barra de estado -->
+		<StatusBar Grid.Row="3" Grid.Column="0">
 			<StatusBarItem>
-				<TextBlock x:Name="lblStatus">Estado</TextBlock>
+				<TextBlock Text="{Binding Path=StatusMessage}"/>
 			</StatusBarItem>
 			<StatusBarItem HorizontalAlignment="Right">
-				<TextBlock Text="{Binding Path=ActiveDocument.ContentViewModel.PropertiesMessage}"></TextBlock>
+				<StackPanel Orientation="Horizontal">
+					<!--
+					<TextBlock Text="{Binding Path=ProgressMessage}" Visibility="{Binding Path=ShowProgressBar,Converter={StaticResource BoolToVisibilityConverter}}"
+					VerticalAlignment="Center"
+							  Margin="0, 2, 5, 2" />
+					<ProgressBar x:Name="prgProgress" Width="200" Height="20" Visibility="{Binding Path=ShowProgressBar,Converter={StaticResource BoolToVisibilityConverter}}"
+								 IsIndeterminate="True"
+								 VerticalAlignment="Center"
+								 Value="{Binding Path=ActualProgress}" Maximum="{Binding Path=TotalProgress}" 
+								 Margin="0, 2, 5, 2" />
+					
+					<Button Visibility="{Binding Path=ShowProgressBar,Converter={StaticResource BoolToVisibilityConverter}}"
+							Command="{Binding Path=CancelProcessCommand}">
+						<Button.Content>
+							<Image  Width="16" Height="16" Source="/BauControls;component/Themes/Images/Close.png" />
+						</Button.Content>
+					</Button>
+					-->
+				</StackPanel>
 			</StatusBarItem>
 			<StatusBarItem HorizontalAlignment="Right">
-				<ProgressBar x:Name="prgProgress" Width="200" Height="20" Visibility="Hidden"></ProgressBar>
+				<TextBlock x:Name="lblVersion" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5"/>
 			</StatusBarItem>
 		</StatusBar>
 	</Grid>

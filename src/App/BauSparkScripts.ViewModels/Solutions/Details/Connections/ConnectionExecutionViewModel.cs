@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Bau.Libraries.BauMvvm.ViewModels;
@@ -17,22 +18,26 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 		private string _fileNameParameters, _shortFileName, _executionTime;
 		private BauMvvm.ViewModels.Media.MvvmColor _executionTimeColor;
 		private bool _isExecuting;
+		private CancellationTokenSource _tokenSource;
+		private CancellationToken _cancellationToken = CancellationToken.None;
+		private System.Timers.Timer _timer;
+		private System.Diagnostics.Stopwatch _stopwatch;
 
 		public ConnectionExecutionViewModel(SolutionViewModel solutionViewModel)
 		{
 			// Asigna la solución
 			SolutionViewModel = solutionViewModel;
 			// Asigna los comandos
-			ExecuteScripCommand = new BaseCommand(async _ => await ExecuteScriptAsync(), _ => GetSelectedConnection() != null && !IsExecuting)
-											.AddListener(this, nameof(ComboViewModel.SelectedItem))
-											.AddListener(this, nameof(FileNameParameters))
-											.AddListener(this, nameof(IsExecuting));
+			ExecuteScripCommand = new BaseCommand(async _ => await ExecuteScriptAsync(), _ => !IsExecuting)
+													.AddListener(this, nameof(IsExecuting));
+			CancelScriptExecutionCommand = new BaseCommand(_ => CancelScriptExecution(), _ => IsExecuting)
+													.AddListener(this, nameof(IsExecuting));
 			OpenParametersFileCommand = new BaseCommand(_ => OpenParametersFile());
 			RemoveParametersFileCommand = new BaseCommand(_ => FileNameParameters = string.Empty);
 		}
 
 		/// <summary>
-		///		Inicialize el viewModel (cuando ya se ha cargado la solución)
+		///		Inicializa el viewModel (cuando ya se ha cargado la solución)
 		/// </summary>
 		public void Initialize()
 		{
@@ -72,51 +77,92 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 		{
 			if (IsExecuting)
 				SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("Ya se está ejecutando una consulta");
-			if (GetSelectedConnection() == null)
-				SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("Seleccione una conexión");
 			else
 			{
-				(LibDataStructures.Collections.NormalizedDictionary<object> parameters, string error) = GetParameters();
+				ConnectionModel connection = GetSelectedConnection();
 
-					// Si ha podido cargar el archivo de parámetros, ejecuta el script
-					if (!string.IsNullOrWhiteSpace(error))
-						SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage(error);
+					if (connection == null)
+						SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("Seleccione una conexión");
 					else
 					{
-						System.Timers.Timer timer = new System.Timers.Timer(TimeSpan.FromMilliseconds(500).TotalMilliseconds);
-						System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+						(Application.Connections.Models.ArgumentListModel arguments, string error) = GetParameters();
 
-							// Indica que se está ejecutando una tarea y arranca el temporizador
-							IsExecuting = true;
-							timer.Elapsed += (sender, args) => ExecutionTime = stopwatch.Elapsed.ToString();
-							timer.Start();
-							stopwatch.Start();
-							ExecutionTimeColor = BauMvvm.ViewModels.Media.MvvmColor.Red;
-							// Ejecuta la tarea
-							try
+							// Si ha podido cargar el archivo de parámetros, ejecuta el script
+							if (!string.IsNullOrWhiteSpace(error))
+								SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage(error);
+							else
 							{
-								await SolutionViewModel.MainViewModel.ExecuteScriptAsync(GetSelectedConnection(), parameters);
+								// Inicializa el temporizador
+								_timer = new System.Timers.Timer(TimeSpan.FromMilliseconds(500).TotalMilliseconds);
+								_stopwatch = new System.Diagnostics.Stopwatch();
+								// Indica que se está ejecutando una tarea y arranca el temporizador
+								IsExecuting = true;
+								_timer.Elapsed += (sender, args) => ExecutionTime = _stopwatch.Elapsed.ToString();
+								_timer.Start();
+								_stopwatch.Start();
+								ExecutionTimeColor = BauMvvm.ViewModels.Media.MvvmColor.Red;
+								// Obtiene el token de cancelación
+								_tokenSource = new CancellationTokenSource();
+								_cancellationToken = _tokenSource.Token;
+								// Ejecuta la tarea
+								try
+								{
+									await SolutionViewModel.MainViewModel.ExecuteScriptAsync(connection, arguments, _cancellationToken);
+								}
+								catch (Exception exception)
+								{
+									SolutionViewModel.MainViewModel.MainController.Logger.Default.LogItems.Error($"Error al ejecutar la consulta. {exception.Message}");
+								}
+								// Indica que ha finalizado la tarea y detiene el temporizador
+								StopExecuting();
 							}
-							catch (Exception exception)
-							{
-								SolutionViewModel.MainViewModel.MainController.Logger.Default.LogItems.Error($"Error al ejecutar la consulta. {exception.Message}");
-							}
-							SolutionViewModel.MainViewModel.MainController.Logger.Flush();
-							// Indica que ha finalizado la tarea y detiene el temporizador
-							timer.Stop();
-							stopwatch.Stop();
-							ExecutionTimeColor = BauMvvm.ViewModels.Media.MvvmColor.Black;
-							IsExecuting = false;
 					}
+			}
+		}
+
+		/// <summary>
+		///		Detiene la ejecución
+		/// </summary>
+		private void StopExecuting()
+		{
+			// Detiene los temporizadores
+			_timer.Stop();
+			_stopwatch.Stop();
+			// Indica que ya no es está ejecutando
+			ExecutionTime = _stopwatch.Elapsed.ToString();
+			ExecutionTimeColor = BauMvvm.ViewModels.Media.MvvmColor.Black;
+			IsExecuting = false;
+			// Vacía el token de cancelación
+			_cancellationToken = CancellationToken.None;
+			// Log
+			SolutionViewModel.MainViewModel.MainController.Logger.Flush();
+		}
+
+		/// <summary>
+		///		Cancela la ejecución del script
+		/// </summary>
+		private void CancelScriptExecution()
+		{
+			if (IsExecuting && _cancellationToken != null && _cancellationToken != CancellationToken.None)
+			{
+				if (_cancellationToken.CanBeCanceled)
+				{
+					// Cancela las tareas
+					_tokenSource.Cancel();
+					// Log
+					SolutionViewModel.MainViewModel.MainController.Logger.Default.LogItems.Error("Consulta cancelada");
+					// Indica que ya no está en ejecución
+					StopExecuting();
+				}
 			}
 		}
 
 		/// <summary>
 		///		Obtiene los parámetros de un archivo
 		/// </summary>
-		internal (LibDataStructures.Collections.NormalizedDictionary<object> parameters, string error) GetParameters()
+		internal (Application.Connections.Models.ArgumentListModel arguments, string error) GetParameters()
 		{
-			LibDataStructures.Collections.NormalizedDictionary<object> parameters = new LibDataStructures.Collections.NormalizedDictionary<object>();
+			Application.Connections.Models.ArgumentListModel arguments = new Application.Connections.Models.ArgumentListModel();
 			string error = string.Empty;
 
 				// Carga los parámetros si es necesario
@@ -134,7 +180,12 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 									error = "No se ha encontrado ningún parámetro en el archivo";
 								else
 									foreach (System.Data.DataColumn column in table.Columns)
-										parameters.Add(column.ColumnName, table.Rows[0][column.Ordinal]);
+									{
+										if (column.ColumnName.StartsWith("Constant.", StringComparison.CurrentCultureIgnoreCase))
+											arguments.Constants.Add(column.ColumnName.Substring("Constant.".Length), table.Rows[0][column.Ordinal]);
+										else
+											arguments.Parameters.Add(column.ColumnName, table.Rows[0][column.Ordinal]);
+									}
 						}
 						catch (Exception exception)
 						{
@@ -142,7 +193,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 						}
 				}
 				// Devuelve el resultado
-				return (parameters, error);
+				return (arguments, error);
 		}
 
 		/// <summary>
@@ -159,7 +210,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 					FileNameParameters = fileName;
 					// Guarda el nombre de archivo en la solución
 					SolutionViewModel.Solution.LastParametersFileName = fileName;
-					SolutionViewModel.MainViewModel.SaveSolution(false);
+					SolutionViewModel.MainViewModel.SaveSolution();
 					// Cambia el último directorio seleccionado
 					SolutionViewModel.MainViewModel.LastPathSelected = System.IO.Path.GetDirectoryName(FileNameParameters);
 				}
@@ -237,6 +288,11 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 		///		Comando de ejecución de un script
 		/// </summary>
 		public BaseCommand ExecuteScripCommand { get; }
+
+		/// <summary>
+		///		Comando para cancelar la ejecución de un script
+		/// </summary>
+		public BaseCommand CancelScriptExecutionCommand { get; }
 
 		/// <summary>
 		///		Comando para abrir un archivo de parámetros

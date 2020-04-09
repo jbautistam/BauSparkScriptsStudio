@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Bau.Libraries.LibHelper.Extensors;
 using Bau.Libraries.BauMvvm.ViewModels;
@@ -10,15 +11,22 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 	/// </summary>
 	public class TreeFilesViewModel : BaseTreeViewModel
 	{	
+		// Variables privadas
+		private NodeFileViewModel _nodeToCopy;
+
 		public TreeFilesViewModel(SolutionViewModel solutionViewModel) : base(solutionViewModel)
 		{ 
 			NewFolderCommand = new BaseCommand(_ => CreateFolder(), _ => CanCreateFileOrFolder())
 										.AddListener(this, nameof(SelectedNode));
 			NewFileCommand = new BaseCommand(_ => CreateFile(), _ => CanCreateFileOrFolder())
 										.AddListener(this, nameof(SelectedNode));
-			ExportCommand = new BaseCommand(_ => Export());
 			ProcessScriptCommand = new BaseCommand(_ => ExecuteScript(), _ => CanExecuteScript())
 										.AddListener(this, nameof(SelectedNode));
+			CopyCommand = new BaseCommand(_ => CopyFile(), _ => CanExecuteAction(nameof(CopyCommand)))
+										.AddListener(this, nameof(SelectedNode));
+			PasteCommand = new BaseCommand(_ => PasteFile(), _ => CanExecuteAction(nameof(PasteCommand)))
+										.AddListener(this, nameof(SelectedNode));
+			SeeAtExplorerCommand = new BaseCommand(_ => OpenFileExplorer());
 		}
 
 		/// <summary>
@@ -62,7 +70,19 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 		/// </summary>
 		protected override bool CanExecuteAction(string action)
 		{
-			return true;
+			BaseTreeNodeViewModel.NodeType type = GetSelectedNodeType();
+
+				// Devuelve el valor que indica si puede ejecutar la acción
+				switch (action)
+				{
+					case nameof(CopyCommand):
+						return type == BaseTreeNodeViewModel.NodeType.File;
+					case nameof(PasteCommand):
+						return _nodeToCopy != null && SelectedNode != null && 
+									(SelectedNode is NodeFolderRootViewModel || ((SelectedNode as NodeFileViewModel)?.IsFolder ?? false));
+					default:
+						return true;
+				}
 		}
 
 		/// <summary>
@@ -87,6 +107,8 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 			{
 				if (node.FileName.EndsWith(".parquet", StringComparison.CurrentCultureIgnoreCase))
 					SolutionViewModel.MainViewModel.MainController.OpenWindow(new Details.Files.ParquetFileViewModel(SolutionViewModel, node.FileName));
+				else if (node.FileName.EndsWith(".csv", StringComparison.CurrentCultureIgnoreCase))
+					SolutionViewModel.MainViewModel.MainController.OpenWindow(new Details.Files.CsvFileViewModel(SolutionViewModel, node.FileName));
 				else
 					SolutionViewModel.MainViewModel.MainController.OpenWindow(new Details.Files.FileViewModel(SolutionViewModel, node.FileName));
 			}
@@ -153,7 +175,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 				if (SelectedNode != null)
 				{
 					if (SelectedNode is NodeFolderRootViewModel nodeFolder)
-						path = nodeFolder.Path;
+						path = nodeFolder.FileName;
 					else if (SelectedNode is NodeFileViewModel pathNode)
 					{
 						if (pathNode.IsFolder)
@@ -164,6 +186,54 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 				}
 				// Devuelve la carpeta
 				return path;
+		}
+
+		/// <summary>
+		///		Copia un archivo
+		/// </summary>
+		private void CopyFile()
+		{
+			if (SelectedNode is NodeFileViewModel node)
+				_nodeToCopy = node;
+			else
+				_nodeToCopy = null;
+		}
+
+		/// <summary>
+		///		Pega una carpeta / archivo
+		/// </summary>
+		private void PasteFile()
+		{
+			if (_nodeToCopy != null)
+			{
+				string target = GetSelectedPath();
+				string source = _nodeToCopy.FileName;
+					
+					// Copia el directorio o el archivo
+					if (System.IO.Directory.Exists(source))
+					{
+						if (target.StartsWith(source, StringComparison.CurrentCultureIgnoreCase))
+							SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage($"No se pude copiar {source} sobre {target}");
+						else
+						{
+							// Obtiene el nombre del directorio destino
+							target = LibHelper.Files.HelperFiles.GetConsecutivePath(target, System.IO.Path.GetFileName(source));
+							// Copia el directorio
+							LibHelper.Files.HelperFiles.CopyPath(source, target);
+						}
+					}
+					else
+					{
+						// Obtiene el nombre del archivo
+						target = LibHelper.Files.HelperFiles.GetConsecutiveFileName(target, System.IO.Path.GetFileName(source));
+						// Copia el archivo
+						LibHelper.Files.HelperFiles.CopyFile(source, target);
+					}
+					// Actualiza el árbol
+					Load();
+					// ... y vacía el nodo de copia
+					_nodeToCopy = null;
+			}	
 		}
 
 		/// <summary>
@@ -190,9 +260,11 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 			if (SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowQuestion($"¿Desea quitar la carpeta '{item.Text}' de la solución?"))
 			{
 				// Elimina la carpeta
-				SolutionViewModel.Solution.RemoveFolder(item.Path);
+				SolutionViewModel.Solution.RemoveFolder(item.FileName);
 				// Graba la solución
 				SolutionViewModel.MainViewModel.SaveSolution();
+				// Actualiza el árbol
+				Load();
 			}
 		}
 
@@ -224,54 +296,43 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 		}
 
 		/// <summary>
-		///		Exporta un directorio a Notebooks
-		/// </summary>
-		private void Export()
-		{
-			if (string.IsNullOrWhiteSpace(SolutionViewModel.ConnectionExecutionViewModel.FileNameParameters))
-				SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("Seleccione un archivo de parámetros");
-			else
-			{
-				string path = GetSelectedFolder();
-
-					if (string.IsNullOrWhiteSpace(path))
-						SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("Seleccione una carpeta");
-					else if (!System.IO.Directory.Exists(path))
-						SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("No se encuentra el directorio");
-					else if (SolutionViewModel.MainViewModel.MainController.HostController.DialogsController.OpenDialogSelectPath
-									(SolutionViewModel.MainViewModel.LastPathSelected,
-									 out string targetPath) == BauMvvm.ViewModels.Controllers.SystemControllerEnums.ResultType.Yes)
-					{
-						(LibDataStructures.Collections.NormalizedDictionary<object> parameters, string error) = SolutionViewModel.ConnectionExecutionViewModel.GetParameters();
-
-							if (!string.IsNullOrWhiteSpace(error))
-								SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage(error);
-							else
-							{
-								// Ejecuta la exportación
-								SolutionViewModel.MainViewModel.Manager.ExportToDataBricks(path, targetPath, parameters);
-								// Limpia el log
-								SolutionViewModel.MainViewModel.Manager.Logger.Flush();
-							}
-					}
-			}
-		}
-
-		/// <summary>
 		///		Ejecuta un script
 		/// </summary>
 		private void ExecuteScript()
 		{
-			string fileName = GetSelectedFile();
+			List<string> files = GetFilesFromPath(".sql");
 
-				if (string.IsNullOrEmpty(fileName))
-					SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("Seleccione un archivo o carpeta");
-				else if (!System.IO.File.Exists(fileName))
-					SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("No se encuentra el archivo");
-				else if (!fileName.EndsWith(".sql"))
-					SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("Sólo se pueden ejecutar archivos SQL");
+				// Ejecuta los archivos (si ha encontrado alguno)
+				if (files.Count == 0)
+					SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage("No se encuentra ningún archivo SQL para ejecutar");
 				else
-					SolutionViewModel.MainViewModel.MainController.HostController.SystemController.ShowMessage($"Ejecutar: {fileName}");
+					SolutionViewModel.MainViewModel.MainController.OpenWindow(new Details.Connections.ExecuteFilesViewModel(SolutionViewModel, files));
+		}
+
+		/// <summary>
+		///		Obtiene los archivos SQL de un directorio (o el archivo seleccionado
+		/// </summary>
+		private List<string> GetFilesFromPath(string extension)
+		{
+			List<string> files = new List<string>();
+			string path = GetSelectedFile();
+
+				// Obtiene el archivo seleccionado o los archivos de un directorio
+				if (!string.IsNullOrWhiteSpace(path))
+					files.Add(path);
+				else
+				{
+					// Obtiene la lista de todos los archivos
+					files = LibHelper.Files.HelperFiles.ListRecursive(GetSelectedFolder(), $"*{extension}");
+					// Quita los archivos que no coincidan con la máscara
+					for (int index = files.Count - 1; index	>= 0; index--)
+						if (!files[index].EndsWith(extension, StringComparison.CurrentCultureIgnoreCase))
+							files.RemoveAt(index);
+					// Ordena los archivos
+					files.Sort((first, second) => first.CompareIgnoreNullTo(second));
+				}
+				// Devuelve la colección de archivos
+				return files;
 		}
 
 		/// <summary>
@@ -297,6 +358,48 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 		}
 
 		/// <summary>
+		///		Obtiene el directorio seleccionado
+		/// </summary>
+		private string GetSelectedPath()
+		{
+			string path = string.Empty;
+
+				// Obtiene el directorio
+				if (SelectedNode != null)
+				{
+					if (SelectedNode is NodeFileViewModel fileNode)
+					{
+						if (fileNode.IsFolder)
+							path = fileNode.FileName;
+						else
+							path = System.IO.Path.GetDirectoryName(fileNode.FileName);
+					}
+					else if (SelectedNode is NodeFolderRootViewModel filePath)
+						path = filePath.FileName;
+				}
+				// Devuelve el directorio seleccionado
+				return path;
+		}
+
+		/// <summary>
+		///		Abre el archivo en el explorador
+		/// </summary>
+		private void OpenFileExplorer()
+		{
+			string file = GetSelectedFile();
+			string path;
+
+				// Obtiene el directorio a abrir
+				if (!string.IsNullOrWhiteSpace(file))
+					path = System.IO.Path.GetDirectoryName(file);
+				else
+					path = GetSelectedPath();
+				// Abre el explorador sobre el directorio
+				if (!string.IsNullOrWhiteSpace(path) && System.IO.Directory.Exists(path))
+					SolutionViewModel.MainViewModel.MainController.OpenExplorer(path);
+		}
+
+		/// <summary>
 		///		Comando para crear una nueva carpeta
 		/// </summary>
 		public BaseCommand NewFolderCommand { get; }
@@ -312,8 +415,18 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 		public BaseCommand ProcessScriptCommand { get; }
 
 		/// <summary>
-		///		Comando para exportar
+		///		Comando para copiar un nodo
 		/// </summary>
-		public BaseCommand ExportCommand { get; }
+		public BaseCommand CopyCommand { get; }
+
+		/// <summary>
+		///		Comando para pegar un nodo
+		/// </summary>
+		public BaseCommand PasteCommand { get; }
+
+		/// <summary>
+		///		Comando para abrir en el explorador
+		/// </summary>
+		public BaseCommand SeeAtExplorerCommand { get; }
 	}
 }

@@ -42,6 +42,14 @@ namespace Bau.Libraries.BauMvvm.Views.Controllers
 		}
 
 		/// <summary>
+		///		Muestra un cuadro de mensaje para introducir un texto
+		/// </summary>
+		public Task<(SystemControllerEnums.ResultType result, string input)> ShowInputMultilineStringAsync(string message, string defaultValue = null)
+		{
+			throw new NotImplementedException();
+		}
+
+		/// <summary>
 		///		Muestra una pregunta con tres posibles respuestas
 		/// </summary>
 		public Task<SystemControllerEnums.ResultType> ShowQuestionCancelAsync(string message)

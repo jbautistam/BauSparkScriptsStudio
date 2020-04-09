@@ -7,6 +7,16 @@ namespace Bau.Libraries.BauSparkScripts.Models.Connections
 	/// </summary>
 	public class ConnectionTableFieldModel : LibDataStructures.Base.BaseExtendedModel
 	{
+		public ConnectionTableFieldModel(ConnectionTableModel table)
+		{
+			Table = table;
+		}
+
+		/// <summary>
+		///		Tabla a la que se asocia el campo
+		/// </summary>
+		public ConnectionTableModel Table { get; }
+
 		/// <summary>
 		///		Tipo de campo
 		/// </summary>

@@ -11,7 +11,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Details.Connections
 	/// </summary>
 	public class ComboConnectionsViewModel : BaseObservableObject
 	{
-		// Cobmo de conexiones
+		// Variables privadas
 		private ComboViewModel _connections;
 
 		public ComboConnectionsViewModel(SolutionViewModel solutionViewModel)

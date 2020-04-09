@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 using Bau.Libraries.BauMvvm.ViewModels;
 using Bau.Libraries.BauSparkScripts.Application;
+using Bau.Libraries.BauSparkScripts.Application.Connections.Models;
 using Bau.Libraries.BauSparkScripts.Models.Connections;
 using Bau.Libraries.LibDataStructures.Collections;
 
@@ -18,7 +19,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels
 		// Variables privadas
 		private string _text;
 		private Solutions.Details.IDetailViewModel _selectedDetailsViewModel;
-		private Tools.LogViewModel _logViewModel;
+		private Tools.LogListViewModel _logViewModel;
 
 		public MainViewModel(Controllers.ISparkSolutionController mainController)
 		{
@@ -31,7 +32,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels
 			// Inicializa los objetos
 			SolutionViewModel = new Solutions.SolutionViewModel(this);
 			// Inicializa el log
-			LogViewModel = new Tools.LogViewModel(this);
+			LogViewModel = new Tools.LogListViewModel(this);
 			// Asigna los comandos
 			AddConnectionCommand = new BaseCommand(_ => SolutionViewModel.TreeConnectionsViewModel.OpenConnection(null));
 			AddFolderToExplorerCommand = new BaseCommand(_ => SolutionViewModel.TreeFoldersViewModel.AddFolderToExplorer());
@@ -43,15 +44,11 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels
 		}
 
 		/// <summary>
-		///		Graba la solución y actualiza el árbol
+		///		Graba la solución
 		/// </summary>
-		internal void SaveSolution(bool refresh = true)
+		internal void SaveSolution()
 		{
-			// Graba la solución
 			Manager.SaveSolution(SolutionViewModel.Solution);
-			// Actualiza los árboles (si es necesario)
-			if (refresh)
-				Refresh();
 		}
 
 		/// <summary>
@@ -82,10 +79,27 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels
 		/// <summary>
 		///		Ejecuta el script
 		/// </summary>
-		internal async Task ExecuteScriptAsync(ConnectionModel connection, NormalizedDictionary<object> parameters)
+		internal async Task ExecuteScriptAsync(ConnectionModel connection, ArgumentListModel arguments, System.Threading.CancellationToken cancellationToken)
 		{
-			if (SelectedDetailsViewModel != null && SelectedDetailsViewModel is Solutions.Details.Files.FileViewModel fileViewModel)
-				await fileViewModel.ExecuteScriptAsync(connection, parameters);
+			Solutions.Details.IDetailViewModel detailsViewModel = MainController.GetActiveDetails();
+			bool isExecuting = false;
+
+				// Ejecuta sobre el ViewModel activo
+				if (detailsViewModel != null)
+					switch (SelectedDetailsViewModel)
+					{
+						case Solutions.Details.Files.FileViewModel viewModel:
+								await viewModel.ExecuteScriptAsync(connection, arguments, cancellationToken);
+								isExecuting = true;
+							break;
+						case Solutions.Details.Connections.ExecuteFilesViewModel viewModel:
+								await viewModel.ExecuteScriptAsync(connection, arguments, cancellationToken);
+								isExecuting = true;
+							break;
+					}
+				// Si no se está ejecutando nada, muestra un mensaje al usuario
+				if (!isExecuting)
+					MainController.HostController.SystemController.ShowMessage("Seleccione la ventana de ejecución");
 		}
 
 		/// <summary>
@@ -166,7 +180,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels
 		/// <summary>
 		///		ViewModel de log
 		/// </summary>
-		public Tools.LogViewModel LogViewModel
+		public Tools.LogListViewModel LogViewModel
 		{
 			get { return _logViewModel; }
 			set { CheckProperty(ref _logViewModel, value); }

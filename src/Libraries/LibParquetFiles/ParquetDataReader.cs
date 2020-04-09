@@ -33,17 +33,20 @@ namespace Bau.Libraries.LibParquetFiles
 		/// <summary>
 		///		Abre el archivo
 		/// </summary>
-		private void Open()
+		public void Open()
 		{
-			// Cierra el archivo
-			Close();
-			// Abre el stream
-			_fileReader = System.IO.File.OpenRead(FileName);
-			_parquetReader = new ParquetReader(_fileReader);
-			// e indica que aún no se ha leido ninguna línea
-			_row = 0;
-			_rowGroup = 0;
-			_actualRow = 0;
+			if (IsClosed)
+			{
+				// Abre el stream
+				_fileReader = System.IO.File.OpenRead(FileName);
+				_parquetReader = new ParquetReader(_fileReader);
+				// e indica que aún no se ha leido ninguna línea
+				_row = 0;
+				_rowGroup = 0;
+				_actualRow = 0;
+				// Indica que está abierto
+				IsClosed = false;
+			}
 		}
 
 		/// <summary>
@@ -142,6 +145,8 @@ namespace Bau.Libraries.LibParquetFiles
 				_fileReader.Close();
 				_fileReader = null;
 			}
+			// Indica que está cerrado
+			IsClosed = true;
 		}
 
 		/// <summary>
@@ -325,10 +330,7 @@ namespace Bau.Libraries.LibParquetFiles
 		/// <summary>
 		///		Indica si está cerrado
 		/// </summary>
-		public bool IsClosed 
-		{ 
-			get { return _fileReader == null; }
-		}
+		public bool IsClosed { get; private set; } = true;
 
 		/// <summary>
 		///		Registros afectados

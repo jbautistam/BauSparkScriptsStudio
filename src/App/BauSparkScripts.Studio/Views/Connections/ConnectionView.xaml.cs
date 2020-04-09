@@ -10,10 +10,10 @@ namespace Bau.SparkScripts.Studio.Views.Connections
 	/// </summary>
 	public partial class ConnectionView : Window
 	{
-		public ConnectionView(ConnectionViewModel pathViewModel)
+		public ConnectionView(ConnectionViewModel viewModel)
 		{
 			InitializeComponent();
-			DataContext = ViewModel = pathViewModel;
+			DataContext = ViewModel = viewModel;
 			ViewModel.Close += (sender, eventArgs) => 
 									{
 										DialogResult = eventArgs.IsAccepted; 

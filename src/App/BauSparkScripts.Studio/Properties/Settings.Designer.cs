@@ -46,5 +46,53 @@ namespace Bau.SparkScripts.Studio.Properties {
                 this["LastThemeSelected"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Consolas")]
+        public string EditorFontName {
+            get {
+                return ((string)(this["EditorFontName"]));
+            }
+            set {
+                this["EditorFontName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("14")]
+        public double EditorFontSize {
+            get {
+                return ((double)(this["EditorFontSize"]));
+            }
+            set {
+                this["EditorFontSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EditorShowLinesNumber {
+            get {
+                return ((bool)(this["EditorShowLinesNumber"]));
+            }
+            set {
+                this["EditorShowLinesNumber"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public double EditorZoom {
+            get {
+                return ((double)(this["EditorZoom"]));
+            }
+            set {
+                this["EditorZoom"] = value;
+            }
+        }
     }
 }

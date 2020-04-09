@@ -35,8 +35,20 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Controllers
 		BauMvvm.ViewModels.Controllers.SystemControllerEnums.ResultType OpenWindow(IDetailViewModel detailsViewModel);
 
 		/// <summary>
+		///		Abre un cuadro de diálogo
+		/// </summary>
+		BauMvvm.ViewModels.Controllers.SystemControllerEnums.ResultType OpenDialog(BauMvvm.ViewModels.Forms.Dialogs.BaseDialogViewModel dialogViewModel);
+
+		/// <summary>
+		///		Abre el explorador sobre un directorio
+		/// </summary>
+		void OpenExplorer(string path);
+
+		/// <summary>
 		///		Configuración
 		/// </summary>
 		Configuration.ConfigurationModel Configuration { get; }
+
+		IDetailViewModel GetActiveDetails();
 	}
 }

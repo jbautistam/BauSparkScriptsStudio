@@ -1,158 +1,129 @@
 ﻿using System;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Bau.Libraries.LibHelper.Extensors;
 using Bau.Libraries.LibDbProviders.Spark;
 using Bau.Libraries.BauSparkScripts.Models.Connections;
 using Bau.Libraries.LibDbProviders.Base.Schema;
+using Bau.Libraries.LibDbProviders.Base;
 
 namespace Bau.Libraries.BauSparkScripts.Application.Connections
 {
 	/// <summary>
 	///		Manager de conexiones
 	/// </summary>
-	public class ConnectionManager
+	internal class ConnectionManager
 	{
-		public ConnectionManager(SolutionManager solutionManager, ConnectionModel connection)
+		internal ConnectionManager(SolutionManager solutionManager)
 		{
 			SolutionManager = solutionManager;
-			Connection = connection;
 		}
 
 		/// <summary>
 		///		Carga el esquema de la conexión
 		/// </summary>
-		public void LoadSchema()
+		internal async Task LoadSchemaAsync(ConnectionModel connection, CancellationToken cancellationToken)
 		{
-			// Limpia las tablas de la conexión
-			Connection.Tables.Clear();
-			// Carga el esquema del proveedor
-			using (SparkProvider provider = new SparkProvider(new SparkConnectionString(Connection.ConnectionString)))
-			{
-				SchemaDbModel schema = provider.GetSchema();
+			SchemaDbModel schema = await GetDbProvider(connection).GetSchemaAsync(TimeSpan.FromMinutes(5), cancellationToken);
 
-					// Agrega los campos
-					foreach (TableDbModel tableSchema in schema.Tables)
+				// Limpia las tablas de la conexión
+				connection.Tables.Clear();
+				// Agrega los campos
+				foreach (TableDbModel tableSchema in schema.Tables)
+				{
+					ConnectionTableModel table = new ConnectionTableModel(connection);
+
+						// Asigna las propiedades
+						table.Name = tableSchema.Name;
+						table.Description = tableSchema.Description;
+						table.Schema = tableSchema.Schema;
+						// Asigna los campos
+						foreach (FieldDbModel fieldSchema in tableSchema.Fields)
+						{
+							ConnectionTableFieldModel field = new ConnectionTableFieldModel(table);
+
+								// Asigna las propiedades
+								field.Name = fieldSchema.Name;
+								field.Description = fieldSchema.Description;
+								field.Type = fieldSchema.DbType; // fieldSchema.Type.ToString();
+								field.Length = fieldSchema.Length;
+								field.IsRequired = fieldSchema.IsRequired;
+								field.IsKey = fieldSchema.IsKey;
+								field.IsIdentity = fieldSchema.IsIdentity;
+								// Añade el campo
+								table.Fields.Add(field);
+						}
+						// Añade la tabla a la colección
+						connection.Tables.Add(table);
+				}
+		}
+
+		/// <summary>
+		///		Obtiene un proveedor de base de datos
+		/// </summary>
+		private IDbProvider GetDbProvider(ConnectionModel connection)
+		{
+			IDbProvider provider = CacheProviders.GetProvider(connection);
+
+				// Si no se ha encontrado el proveedor en el diccionario, se crea uno ...
+				if (provider == null)
+				{
+					// Crea el proveedor
+					switch (connection.Type)
 					{
-						ConnectionTableModel table = new ConnectionTableModel();
-
-							// Asigna las propiedades
-							table.Name = tableSchema.Name;
-							table.Description = tableSchema.Description;
-							table.Schema = tableSchema.Schema;
-							// Asigna los campos
-							foreach (FieldDbModel fieldSchema in tableSchema.Fields)
-							{
-								ConnectionTableFieldModel field = new ConnectionTableFieldModel();
-
-									// Asigna las propiedades
-									field.Name = fieldSchema.Name;
-									field.Description = fieldSchema.Description;
-									field.Type = fieldSchema.Type.ToString();
-									field.Length = fieldSchema.Length;
-									field.IsRequired = fieldSchema.IsRequired;
-									field.IsKey = fieldSchema.IsKey;
-									field.IsIdentity = fieldSchema.IsIdentity;
-									// Añade el campo
-									table.Fields.Add(field);
-							}
-							// Añade la tabla a la colección
-							Connection.Tables.Add(table);
+						case ConnectionModel.ConnectionType.Spark:
+								provider = new SparkProvider(new SparkConnectionString(connection.Parameters.ToDictionary()));
+							break;
+						case ConnectionModel.ConnectionType.SqlServer:
+								provider = new LibDbProviders.SqlServer.SqlServerProvider(new LibDbProviders.SqlServer.SqlServerConnectionString(connection.Parameters.ToDictionary()));
+							break;
+						case ConnectionModel.ConnectionType.Odbc:
+								provider = new LibDbProviders.ODBC.OdbcProvider(new LibDbProviders.ODBC.OdbcConnectionString(connection.Parameters.ToDictionary()));
+							break;
+						default:
+							throw new ArgumentOutOfRangeException($"Cant find provider for '{connection.Name}'");
 					}
-			}
+					// Abre el proveedor
+					provider.Open();
+					// Lo añade a la caché
+					CacheProviders.Add(connection, provider);
+				}
+				// Devuelve el proveedor
+				return provider;
 		}
 
 		/// <summary>
 		///		Ejecuta una consulta
 		/// </summary>
-		public DataTable GetDatatableQuery(string query, TimeSpan? timeOut)
+		internal async Task<DataTable> GetDatatableQueryAsync(ConnectionModel connection, string query, 
+															  Models.ArgumentListModel arguments, 
+															  int actualPage, int pageSize, TimeSpan timeout, CancellationToken cancellationToken)
 		{	
-			if (IsDataQuery(query))
-				return ExecuteDataQuery(query, timeOut);
-			else
-				return ExecuteScalarQuery(query, timeOut);
-		}
-
-		/// <summary>
-		///		Comprueba si es una consulta de datos
-		/// </summary>
-		private bool IsDataQuery(string query)
-		{
-			return query.TrimIgnoreNull().StartsWith("SELECT", StringComparison.CurrentCultureIgnoreCase);
-		}
-
-		/// <summary>
-		///		Ejecuta una consulta de datos
-		/// </summary>
-		private DataTable ExecuteDataQuery(string query, TimeSpan? timeOut)
-		{
-			DataTable result = null;
-
-				// Carga los datos
-				using (SparkProvider provider = new SparkProvider(new SparkConnectionString(Connection.ConnectionString)))
-				{
-					// Abre la conexión
-					provider.Open();
-					// Ejecuta la conexión
-					result = provider.GetDataTable(query, null, CommandType.Text, timeOut);
-				}
-				// Devuelve la tabla cargada
-				return result;
-		}
-
-		/// <summary>
-		///		Ejecuta una consulta escalar
-		/// </summary>
-		private DataTable ExecuteScalarQuery(string query, TimeSpan? timeOut)
-		{
-			long rows = 0;
-
-				// Ejecuta la consulta
-				using (SparkProvider provider = new SparkProvider(new SparkConnectionString(Connection.ConnectionString)))
-				{
-					// Abre la conexión
-					provider.Open();
-					// Ejecuta la consulta
-					rows = provider.Execute(query, null, CommandType.Text, timeOut);
-				}
-				// Añade el resultado a la tabla
-				return CreateTable("Rows", rows);
-		}
-
-		/// <summary>
-		///		Crea una tabla con información de campos
-		/// </summary>
-		private DataTable CreateTable(string field, long rows)
-		{
-			DataTable table = new DataTable();
-			DataRow row = table.NewRow();
-
-				// Añade la columna
-				table.Columns.Add(field, typeof(long));
-				// Añade el valor con el número de filas
-				row[0] = rows;
-				// Añade la fila a la tabla
-				table.Rows.Add(row);
-				// Devuelve la tabla resultante
-				return table;
+			return await Task.Run(() => new ScriptSqlController(this).GetDataTableAsync(GetDbProvider(connection),
+																						query, arguments, 
+																						actualPage, pageSize, timeout, cancellationToken));
 		}
 
 		/// <summary>
 		///		Ejecuta una consulta
 		/// </summary>
-		public void ExecuteQuery(string query, LibDataStructures.Collections.NormalizedDictionary<object> parameters, TimeSpan timeOut)
+		internal async Task ExecuteQueryAsync(ConnectionModel connection, string query, 
+											  Models.ArgumentListModel arguments, 
+											  TimeSpan timeout, CancellationToken cancellationToken)
 		{	
-			new ScriptSqlController(this).Execute(query, parameters, timeOut);
+			await Task.Run(() => new ScriptSqlController(this).ExecuteAsync(GetDbProvider(connection), query, arguments, timeout, cancellationToken));
 		}
 
 		/// <summary>
 		///		Manager de la solución
 		/// </summary>
-		public SolutionManager SolutionManager { get; }
+		internal SolutionManager SolutionManager { get; }
 
 		/// <summary>
-		///		Datos de la conexión
+		///		Proveedores de datos
 		/// </summary>
-		public ConnectionModel Connection { get; }
+		private Cache.ProvidersCache CacheProviders = new Cache.ProvidersCache();
 	}
 }

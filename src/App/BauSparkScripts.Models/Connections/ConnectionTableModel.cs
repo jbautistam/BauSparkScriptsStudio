@@ -7,6 +7,16 @@ namespace Bau.Libraries.BauSparkScripts.Models.Connections
 	/// </summary>
 	public class ConnectionTableModel : LibDataStructures.Base.BaseExtendedModel
 	{
+		public ConnectionTableModel(ConnectionModel connection)
+		{
+			Connection = connection;
+		}
+
+		/// <summary>
+		///		Conexión a la que pertenece la tabla
+		/// </summary>
+		public ConnectionModel Connection { get; }
+
 		/// <summary>
 		///		Nombre del esquema
 		/// </summary>

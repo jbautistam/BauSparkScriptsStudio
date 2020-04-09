@@ -5,6 +5,11 @@
     <RootNamespace>Bau.Libraries.LibCsvFiles</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="ve-2694.tmp" />
   </ItemGroup>

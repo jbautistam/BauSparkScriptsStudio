@@ -10,51 +10,53 @@ namespace Bau.Libraries.LibParquetFiles
 	/// </summary>
 	public class ParquetDataTableReader
 	{
+		/// <summary>
+		///		Obtiene un dataTable a partir de un archivo parquet
+		/// </summary>
 		public DataTable ParquetReaderToDataTable(string fileName, int offset, int recordCount, out int totalRecordCount)
 		{
 			DataTable dataTable = new DataTable();
 
-			using (System.IO.Stream fileReader = System.IO.File.OpenRead(fileName))
-			{
-				using (ParquetReader parquetReader = new ParquetReader(fileReader))
+				using (System.IO.Stream fileReader = System.IO.File.OpenRead(fileName))
 				{
-					//Get list of data fields and construct the DataTable
-					DataField[] dataFields = parquetReader.Schema.GetDataFields();
-
-					// Crea las columnas en la tabla
-					CreateColumns(dataTable, dataFields);
-					//Read column by column to generate each row in the datatable
-					totalRecordCount = 0;
-					for (int rowGroup = 0; rowGroup < parquetReader.RowGroupCount; rowGroup++)
+					using (ParquetReader parquetReader = new ParquetReader(fileReader))
 					{
-						int rowsLeftToRead = recordCount;
+						//Get list of data fields and construct the DataTable
+						DataField[] dataFields = parquetReader.Schema.GetDataFields();
 
-						using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(rowGroup))
+						// Crea las columnas en la tabla
+						CreateColumns(dataTable, dataFields);
+						//Read column by column to generate each row in the datatable
+						totalRecordCount = 0;
+						for (int rowGroup = 0; rowGroup < parquetReader.RowGroupCount; rowGroup++)
 						{
-							if (groupReader.RowCount > int.MaxValue)
-								throw new ArgumentOutOfRangeException(string.Format("Cannot handle row group sizes greater than {0}", groupReader.RowCount));
+							int rowsLeftToRead = recordCount;
 
-							int rowsPassedUntilThisRowGroup = totalRecordCount;
-							totalRecordCount += (int) groupReader.RowCount;
-
-							if (offset >= totalRecordCount)
-								continue;
-
-							if (rowsLeftToRead > 0)
+							using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(rowGroup))
 							{
-								int numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCount - offset, recordCount), (int) groupReader.RowCount);
-								rowsLeftToRead -= numberOfRecordsToReadFromThisRowGroup;
+								if (groupReader.RowCount > int.MaxValue)
+									throw new ArgumentOutOfRangeException(string.Format("Cannot handle row group sizes greater than {0}", groupReader.RowCount));
 
-								int recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
+								int rowsPassedUntilThisRowGroup = totalRecordCount;
+								totalRecordCount += (int) groupReader.RowCount;
 
-								ProcessRowGroup(dataTable, groupReader, dataFields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup);
+								if (offset >= totalRecordCount)
+									continue;
+
+								if (rowsLeftToRead > 0)
+								{
+									int numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCount - offset, recordCount), (int) groupReader.RowCount);
+									rowsLeftToRead -= numberOfRecordsToReadFromThisRowGroup;
+
+									int recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
+
+									ProcessRowGroup(dataTable, groupReader, dataFields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup);
+								}
 							}
 						}
 					}
 				}
-			}
-
-			return dataTable;
+				return dataTable;
 		}
 
 		/// <summary>

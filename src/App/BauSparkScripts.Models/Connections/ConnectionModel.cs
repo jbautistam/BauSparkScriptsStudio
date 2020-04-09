@@ -7,6 +7,19 @@ namespace Bau.Libraries.BauSparkScripts.Models.Connections
 	/// </summary>
 	public class ConnectionModel : LibDataStructures.Base.BaseExtendedModel
 	{
+		/// <summary>
+		///		Tipo de conexión
+		/// </summary>
+		public enum ConnectionType
+		{
+			/// <summary>Spark</summary>
+			Spark,
+			/// <summary>Sql server</summary>
+			SqlServer,
+			/// <summary>Odbc</summary>
+			Odbc
+		}
+
 		public ConnectionModel(SolutionModel solution)
 		{
 			Solution = solution;
@@ -18,9 +31,19 @@ namespace Bau.Libraries.BauSparkScripts.Models.Connections
 		public SolutionModel Solution { get; }
 
 		/// <summary>
-		///		Cadena de conexión
+		///		Tipo de conexión
 		/// </summary>
-		public string ConnectionString { get; set; }
+		public ConnectionType Type { get; set; } = ConnectionType.Spark;
+
+		/// <summary>
+		///		Parámetros de la conexión
+		/// </summary>
+		public LibDataStructures.Collections.NormalizedDictionary<string> Parameters { get; } = new LibDataStructures.Collections.NormalizedDictionary<string>();
+
+		/// <summary>
+		///		Timeout para la ejecución de scripts
+		/// </summary>
+		public TimeSpan TimeoutExecuteScript { get; set; }
 
 		/// <summary>
 		///		Tablas

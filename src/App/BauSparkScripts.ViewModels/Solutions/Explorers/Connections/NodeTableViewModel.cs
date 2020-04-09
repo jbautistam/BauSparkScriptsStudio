@@ -16,6 +16,17 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Connectio
 		}
 
 		/// <summary>
+		///		Obtiene el texto de la cadena SQL asociada a la tabla
+		/// </summary>
+		public string GetSqlSelect(bool fullSql)
+		{
+			if (TreeViewModel is TreeConnectionsViewModel trvTree)
+				return trvTree.GetSqlSelectText(this, fullSql);
+			else
+				return string.Empty;
+		}
+
+		/// <summary>
 		///		Carga los nodos de la tabla
 		/// </summary>
 		protected override void LoadNodes()

@@ -5,13 +5,23 @@
     <RootNamespace>Bau.Libraries.BauSparkScripts.Application</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Connections\DatabaseProvidersTools.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\LibDataStructures\LibDataStructures.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibDbProviders.Base\LibDbProviders.Base.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibDbProviders.Odbc\LibDbProviders.Odbc.csproj" />
     <ProjectReference Include="..\..\Libraries\LibDbProviders.Spark\LibDbProviders.Spark.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibDbProviders.SqlServer\LibDbProviders.SqlServer.csproj" />
     <ProjectReference Include="..\..\Libraries\LibHelper\LibHelper.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibJsonConversor\LibJsonConversor.csproj" />
     <ProjectReference Include="..\..\Libraries\LibLogger.Core\LibLogger.Core.csproj" />
     <ProjectReference Include="..\..\Libraries\LibMarkup\LibMarkup.csproj" />
     <ProjectReference Include="..\BauSparkScripts.Models\BauSparkScripts.Models.csproj" />

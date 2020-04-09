@@ -12,7 +12,8 @@
 				ContextMenu="{DynamicResource ResourceKey=mnuExplorer}" 
 				ItemsSource="{Binding Path=Children}"
 				SelectedItemChanged="trvExplorer_SelectedItemChanged"
-				MouseDoubleClick="trvExplorer_MouseDoubleClick" MouseDown="trvExplorer_MouseDown">
+				MouseDoubleClick="trvExplorer_MouseDoubleClick" MouseDown="trvExplorer_MouseDown"
+				PreviewMouseLeftButtonDown="trvExplorer_PreviewMouseLeftButtonDown" PreviewMouseMove="trvExplorer_PreviewMouseMove" >
 			<TreeView.Resources>
 				<!-- Plantilla de los nodos -->
 				<HierarchicalDataTemplate DataType="{x:Type ViewModel:BaseTreeNodeViewModel}" ItemsSource="{Binding Children}">
@@ -36,6 +37,11 @@
 								<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/Connection.png" />
 							</MenuItem.Icon>
 						</MenuItem>
+						<MenuItem Header="Distribución" Command="{Binding Path=NewDeploymentCommand}">
+							<MenuItem.Icon>
+								<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/Deployment.png" />
+							</MenuItem.Icon>
+						</MenuItem>
 					</MenuItem>
 					<MenuItem Header="Abrir" Command="{Binding OpenPropertiesCommand}">
 						<MenuItem.Icon>
@@ -52,6 +58,12 @@
 					<MenuItem Header="Consulta" Command="{Binding Path=NewQueryCommand}">
 						<MenuItem.Icon>
 							<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/Script.png" />
+						</MenuItem.Icon>
+					</MenuItem>
+					<Separator/>
+					<MenuItem Header="Distribuir" Command="{Binding Path=ExecuteDeploymentCommand}">
+						<MenuItem.Icon>
+							<Image Width="16" Height="16" Source="/BauSparkScripts.Studio;component/Resources/Images/Deployment.png" />
 						</MenuItem.Icon>
 					</MenuItem>
 				</ContextMenu>

@@ -155,8 +155,8 @@ namespace Bau.SparkScripts.Studio.Controls
 		private DockLayoutDocument GetDocument(string id)
 		{
 			// Busca el panel en el diccionario
-			if (Documents.TryGetValue(id, out DockLayoutDocument viewModel))
-				return viewModel;
+			if (Documents.TryGetValue(id, out DockLayoutDocument document))
+				return document;
 			else
 				return null;
 		}
@@ -252,7 +252,7 @@ namespace Bau.SparkScripts.Studio.Controls
 				// Añade el diccionario de documentos a la lista
 				foreach (KeyValuePair<string, DockLayoutDocument> document in Documents)
 					documents.Add(document.Value);
-				// Recorre la lista cerrando todos los documentos aviertos
+				// Recorre la lista cerrando todos los documentos abiertos
 				for (int index = documents.Count - 1; index >= 0; index--)
 					if (documents[index] != null && documents[index].Type == DockLayoutDocument.DocumentType.Document && 
 							documents[index].LayoutContent != null)

@@ -5,6 +5,11 @@
     <RootNamespace>Bau.Libraries.BauSparkScripts.ViewModels</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Solutions\Explorers\Connections\TreeDetailsNodeViewModel.cs" />
     <Compile Remove="Solutions\Explorers\Connections\TreeNodeViewModel.cs" />
@@ -14,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\BauMvvm.ViewModels\BauMvvm.ViewModels.csproj" />
+    <ProjectReference Include="..\..\Libraries\LibCloudStorage\LibCloudStorage.csproj" />
     <ProjectReference Include="..\..\Libraries\LibCsvFiles\LibCsvFiles.csproj" />
     <ProjectReference Include="..\..\Libraries\LibJsonConversor\LibJsonConversor.csproj" />
     <ProjectReference Include="..\..\Libraries\LibLogger.Core\LibLogger.Core.csproj" />

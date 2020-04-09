@@ -23,7 +23,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="Controllers\HostController.cs" />
     <Compile Include="Controllers\HostDialogsController.cs" />
+    <Compile Include="Controllers\HostHelperController.cs" />
     <Compile Include="Controllers\HostSystemControllerAsync.cs" />
     <Compile Include="Controllers\HostSystemController.cs" />
     <Compile Include="Controllers\IHostViewsController.cs" />
@@ -58,6 +59,9 @@
     <Compile Include="Converters\InverseBoolToVisibilityConverter.cs" />
     <Compile Include="Converters\MVVMColorConverter.cs" />
     <Compile Include="Forms\BaseFormView.cs" />
+    <Compile Include="Forms\Dialogs\InputBoxMonolineView.xaml.cs">
+      <DependentUpon>InputBoxMonolineView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Forms\Dialogs\InputBoxView.xaml.cs">
       <DependentUpon>InputBoxView.xaml</DependentUpon>
     </Compile>
@@ -67,6 +71,10 @@
     <Compile Include="Tools\ToolsWpf.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Forms\Dialogs\InputBoxMonolineView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Forms\Dialogs\InputBoxView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

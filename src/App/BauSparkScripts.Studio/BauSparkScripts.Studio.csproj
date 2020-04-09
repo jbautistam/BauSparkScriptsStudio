@@ -28,7 +28,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
@@ -58,24 +58,47 @@
     </ApplicationDefinition>
     <Compile Include="Controllers\AppConfigurationController.cs" />
     <Compile Include="Controllers\AppController.cs" />
+    <Compile Include="Views\Cloud\StorageView.xaml.cs">
+      <DependentUpon>StorageView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Connections\ExecuteFilesView.xaml.cs">
+      <DependentUpon>ExecuteFilesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Tools\FindViewModel.cs" />
     <Compile Include="Controls\ClosingEventArgs.cs" />
     <Compile Include="Controls\DockLayout.cs" />
     <Compile Include="Controls\DockLayoutDocument.cs" />
+    <Compile Include="Converters\FileNameIconConverter.cs" />
     <Compile Include="Converters\FileIconConverter.cs" />
+    <Compile Include="Views\Deployments\DeploymentView.xaml.cs">
+      <DependentUpon>DeploymentView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Connections\ConnectionView.xaml.cs">
       <DependentUpon>ConnectionView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Connections\ExecuteQueryView.xaml.cs">
       <DependentUpon>ExecuteQueryView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Files\ParquetFileView.xaml.cs">
-      <DependentUpon>ParquetFileView.xaml</DependentUpon>
+    <Compile Include="Views\Files\CsvFilePropertiesView.xaml.cs">
+      <DependentUpon>CsvFilePropertiesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Files\DataTableFileView.xaml.cs">
+      <DependentUpon>DataTableFileView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Files\FileDetailsView.xaml.cs">
       <DependentUpon>FileDetailsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Log\LogView.xaml.cs">
       <DependentUpon>LogView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Tools\ConfigurationView.xaml.cs">
+      <DependentUpon>ConfigurationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Tools\FindView.xaml.cs">
+      <DependentUpon>FindView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\TreeStoragesExplorer.xaml.cs">
+      <DependentUpon>TreeStoragesExplorer.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\TreeFilesExplorer.xaml.cs">
       <DependentUpon>TreeFilesExplorer.xaml</DependentUpon>
@@ -91,7 +114,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Controllers\HostController.cs" />
     <Compile Include="Controllers\SparkSolutionController.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -101,6 +123,18 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\Cloud\StorageView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Connections\ExecuteFilesView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Deployments\DeploymentView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\Connections\ConnectionView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -109,7 +143,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\Files\ParquetFileView.xaml">
+    <Page Include="Views\Files\CsvFilePropertiesView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Files\DataTableFileView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -120,6 +158,18 @@
     <Page Include="Views\Log\LogView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Tools\ConfigurationView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Tools\FindView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TreeStoragesExplorer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\TreeFilesExplorer.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -191,13 +241,36 @@
     <Resource Include="Resources\Images\ArrowRight.png" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Resources\Images\FileParquet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\FileCsv.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\FileSql.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\FileJson.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\FileXml.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\FilePython.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\FilePowershell.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\FileCsharp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Images\Search.png" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\Controls\BauControls\BauControls.csproj">
       <Project>{c4411755-086a-464b-a62d-be0ccd18efb9}</Project>
       <Name>BauControls</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Controls\CodeEditor\CodeEditor.csproj">
-      <Project>{4e07699f-5bd6-41c5-a42e-928a2aa332fc}</Project>
-      <Name>CodeEditor</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Libraries\BauMvvm.ViewModels\BauMvvm.ViewModels.csproj">
       <Project>{720cca0b-7a97-44d3-8571-c735ca85e3e2}</Project>
@@ -207,6 +280,14 @@
       <Project>{ffa90cce-8c07-4a0f-a90c-3ed1b7b81e9c}</Project>
       <Name>BauMvvm.Views</Name>
     </ProjectReference>
+    <ProjectReference Include="..\BauSparkScripts.ViewModels\BauSparkScripts.ViewModels.csproj">
+      <Project>{b0e212b0-ba58-4ba6-b042-b7974cf15dd9}</Project>
+      <Name>BauSparkScripts.ViewModels</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Controls\CodeEditor\CodeEditor.csproj">
+      <Project>{4e07699f-5bd6-41c5-a42e-928a2aa332fc}</Project>
+      <Name>CodeEditor</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\LibHelper\LibHelper.csproj">
       <Project>{681609af-b80a-4cbd-80a9-926b3c6fa817}</Project>
       <Name>LibHelper</Name>
@@ -215,9 +296,9 @@
       <Project>{ad91f360-8c28-44f8-9fe1-eb78a80f5d01}</Project>
       <Name>LibLogger.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\BauSparkScripts.ViewModels\BauSparkScripts.ViewModels.csproj">
-      <Project>{b0e212b0-ba58-4ba6-b042-b7974cf15dd9}</Project>
-      <Name>BauSparkScripts.ViewModels</Name>
+    <ProjectReference Include="..\..\Libraries\LibSystem.Windows\LibSystem.Windows.csproj">
+      <Project>{15653e4e-c834-4db7-8d99-e80c32de7b3a}</Project>
+      <Name>LibSystem.Windows</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

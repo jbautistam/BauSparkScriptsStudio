@@ -7,7 +7,7 @@ namespace Bau.Libraries.BauMvvm.Views.Controllers
 	/// <summary>
 	///		Base para los controladores de host
 	/// </summary>
-	public abstract class HostController : IHostController
+	public class HostController : IHostController
 	{
 		public HostController(string applicationName, System.Windows.Window mainWindow)
 		{

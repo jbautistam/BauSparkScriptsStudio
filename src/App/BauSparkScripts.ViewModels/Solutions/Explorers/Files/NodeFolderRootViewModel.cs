@@ -11,12 +11,12 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 	public class NodeFolderRootViewModel : BaseTreeNodeViewModel
 	{
 		// Variables privadas
-		private string _path;
+		private string _fileName;
 
 		public NodeFolderRootViewModel(BaseTreeViewModel trvTree, IHierarchicalViewModel parent, string path) 
 					: base(trvTree, parent, path, NodeType.FilesRoot, IconType.Project, path, true, true, MvvmColor.Red)
 		{
-			Path = path;
+			FileName = path;
 		}
 
 		/// <summary>
@@ -48,12 +48,12 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Files
 		/// <summary>
 		///		Directorio
 		/// </summary>
-		public string Path
+		public string FileName
 		{
-			get { return _path; }
+			get { return _fileName; }
 			set 
 			{ 
-				if (CheckProperty(ref _path, value))
+				if (CheckProperty(ref _fileName, value))
 				{
 					if (!string.IsNullOrWhiteSpace(value))
 					{

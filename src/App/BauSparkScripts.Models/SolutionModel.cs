@@ -69,6 +69,16 @@ namespace Bau.Libraries.BauSparkScripts.Models
 		public Connections.ConnectionModelCollection Connections { get; } = new Connections.ConnectionModelCollection();
 
 		/// <summary>
+		///		Modelos de distribución
+		/// </summary>
+		public Deployments.DeploymentModelCollection Deployments { get; } = new Deployments.DeploymentModelCollection();
+
+		/// <summary>
+		///		Blob storage
+		/// </summary>
+		public Cloud.StorageModelCollection	Storages { get; } = new Cloud.StorageModelCollection();
+
+		/// <summary>
 		///		Carpetas abiertas
 		/// </summary>
 		public List<string> Folders { get; } = new List<string>();

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Threading.Tasks;
+
 using Bau.Libraries.BauSparkScripts.Models;
-using Bau.Libraries.BauSparkScripts.Models.Connections;
-using Bau.Libraries.LibDataStructures.Collections;
 
 namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions
 {
@@ -14,6 +12,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions
 		// Variables privadas
 		private Explorers.Connections.TreeConnectionsViewModel _treeConnectionsViewModel;
 		private Explorers.Files.TreeFilesViewModel _treeFoldersViewModel;
+		private Explorers.Cloud.TreeStorageViewModel _treeStoragesViewModel;
 		private Details.Connections.ConnectionExecutionViewModel _connectionsViewModel;
 
 		public SolutionViewModel(MainViewModel mainViewModel)
@@ -21,6 +20,7 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions
 			MainViewModel = mainViewModel;
 			TreeConnectionsViewModel = new Explorers.Connections.TreeConnectionsViewModel(this);
 			TreeFoldersViewModel = new Explorers.Files.TreeFilesViewModel(this);
+			TreeStoragesViewModel = new Explorers.Cloud.TreeStorageViewModel(this);
 			ConnectionExecutionViewModel = new Details.Connections.ConnectionExecutionViewModel(this);
 		}
 
@@ -33,8 +33,9 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions
 			Solution = MainViewModel.Manager.LoadConfiguration();
 			// Carga los exploradores
 			TreeConnectionsViewModel.Load();
-			TreeFoldersViewModel.Load();
 			ConnectionExecutionViewModel.Initialize();
+			TreeFoldersViewModel.Load();
+			TreeStoragesViewModel.Load();
 		}
 
 		/// <summary>
@@ -63,6 +64,15 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions
 		{
 			get { return _treeFoldersViewModel; }
 			set { CheckObject(ref _treeFoldersViewModel, value); }
+		}
+
+		/// <summary>
+		///		ViewModel del árbol de storage
+		/// </summary>
+		public Explorers.Cloud.TreeStorageViewModel TreeStoragesViewModel
+		{
+			get { return _treeStoragesViewModel; }
+			set { CheckObject(ref _treeStoragesViewModel, value); }
 		}
 
 		/// <summary>

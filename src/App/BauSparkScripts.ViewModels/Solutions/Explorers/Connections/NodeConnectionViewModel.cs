@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Bau.Libraries.BauMvvm.ViewModels.Forms.ControlItems;
 using Bau.Libraries.BauMvvm.ViewModels.Media;
@@ -11,6 +14,9 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Connectio
 	/// </summary>
 	public class NodeConnectionViewModel : BaseTreeNodeViewModel
 	{
+		// Variables privadas
+		private SynchronizationContext _contextUi = SynchronizationContext.Current;
+
 		public NodeConnectionViewModel(BaseTreeViewModel trvTree, IHierarchicalViewModel parent, ConnectionModel connection) : 
 					base(trvTree, parent, connection.Name, NodeType.Connection, IconType.Connection, connection, true, true, MvvmColor.Red)
 		{
@@ -22,24 +28,45 @@ namespace Bau.Libraries.BauSparkScripts.ViewModels.Solutions.Explorers.Connectio
 		/// </summary>
 		protected override void LoadNodes()
 		{
-			// Carga el esquema de las conexiones
-			try
-			{
-				TreeViewModel.SolutionViewModel.MainViewModel.Manager.LoadSchema(Connection);
-			}
-			catch (Exception exception)
-			{
-				Children.Add(new NodeTableViewModel(TreeViewModel, this, 
-													new ConnectionTableModel 
-															{
-																Name = "No se puede cargar el esquema de la conexión" 
-															}
-													));
-				System.Diagnostics.Trace.TraceError($"Error when load schema {exception.Message}");
-			}
-			// Muestra las tablas
-			foreach (ConnectionTableModel table in Connection.Tables)
-				Children.Add(new NodeTableViewModel(TreeViewModel, this, table));
+			Children.Add(new NodeMessageViewModel(TreeViewModel, this, "Cargando ..."));
+			Task.Run(async () => await LoadNodesAsync(new CancellationToken()));
+		}
+
+		/// <summary>
+		///		Carga los nodos de forma asíncrona
+		/// </summary>
+		private async Task LoadNodesAsync(CancellationToken cancellationToken)
+		{
+			object state = new object();
+			List<BaseTreeNodeViewModel> nodes = new List<BaseTreeNodeViewModel>();
+
+				// Carga el esquema de las conexiones
+				try
+				{
+					// Carga el esquema
+					await TreeViewModel.SolutionViewModel.MainViewModel.Manager.LoadSchemaAsync(Connection, cancellationToken);
+					// Mete las tablas en la lista
+					foreach (ConnectionTableModel table in Connection.Tables)
+						nodes.Add(new NodeTableViewModel(TreeViewModel, this, table));
+				}
+				catch (Exception exception)
+				{
+					nodes.Add(new NodeMessageViewModel(TreeViewModel, this, "No se puede cargar el esquema de la conexión"));
+					System.Diagnostics.Trace.TraceError($"Error when load schema {exception.Message}");
+				}
+				// Muestra las tablas
+				//? _contexUi mantiene el contexto de sincronización que creó el ViewModel (que debería ser la interface de usuario)
+				//? Al generarse las tablas en otro hilo, no se puede añadir a ObservableCollection sin una
+				//? excepción del tipo "Este tipo de CollectionView no admite cambios en su SourceCollection desde un hilo diferente del hilo Dispatcher"
+				//? Por eso se tiene que añadir el mensaje de log desde el contexto de sincronización de la UI
+				_contextUi.Send(_ => {
+										// Limpia la lista de nodos
+										Children.Clear();
+										// Añade la lista de tablas leidas
+										foreach (BaseTreeNodeViewModel node in nodes)
+											Children.Add(node);
+									 }, 
+								state);
 		}
 
 		/// <summary>
